@@ -17,8 +17,6 @@ function GUI:Build(Shared)
     self:createContent()
     self:createTabs()
     self:createTabRobo()
-    self:createTabMod()
-    self:createTabLog()
     self:createStatusBar()
 end
 
@@ -78,7 +76,7 @@ function GUI:createHeader()
     logoIcon.Size = UDim2.new(0, 32, 0, 32)
     logoIcon.Position = UDim2.new(0, 8, 0, 5)
     logoIcon.BackgroundColor3 = self.Config.bgGlass
-    logoIcon.Text = ""
+    logoIcon.Text = "🥷"
     logoIcon.TextSize = 18
     logoIcon.Font = Enum.Font.GothamBold
     logoIcon.BorderSizePixel = 0
@@ -191,7 +189,7 @@ function GUI:createTabs()
     
     self.GUI.tabRobo = createTab("ROBO", "🎯 ROBO", 2)
     self.GUI.tabMod = createTab("MOD", "️ MOD", 122)
-    self.GUI.tabLog = createTab("LOG", "📋 LOG", 242)
+    self.GUI.tabLog = createTab("LOG", " LOG", 242)
 end
 
 function GUI:createTabRobo()
@@ -272,7 +270,7 @@ function GUI:createTabRobo()
             elseif type == "LEG" then self.State.stealFilters[r.name] = (r.priority >= 6)
             elseif type == "ALL" then self.State.stealFilters[r.name] = true end
         end
-        self.Shared.Core:updateFilterUI()
+        if self.Shared.Core then self.Shared.Core:updateFilterUI() end
     end
     
     local btnPresetTop = Instance.new("TextButton")
@@ -305,7 +303,7 @@ function GUI:createTabRobo()
     btnPresetAll.Size = UDim2.new(0, 108, 0, 22)
     btnPresetAll.Position = UDim2.new(0, 230, 0, 72)
     btnPresetAll.BackgroundColor3 = self.Config.success
-    btnPresetAll.Text = "🌍 ALL IN"
+    btnPresetAll.Text = " ALL IN"
     btnPresetAll.TextColor3 = Color3.new(0, 0, 0)
     btnPresetAll.TextSize = 8
     btnPresetAll.Font = Enum.Font.GothamBold
@@ -387,7 +385,7 @@ function GUI:createTabRobo()
         for _, item in ipairs(stealButtons) do
             self.State.stealFilters[item.rarity.name] = false
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "✗ " .. item.rarity.short
+            item.button.Text = " " .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
     end)
@@ -426,7 +424,7 @@ function GUI:createTabRobo()
                 btn.Text = "✗ " .. rarity.short
                 btn.TextColor3 = self.Config.textMuted
             end
-            self.Shared.Core:updateEspVisibility()
+            if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
         end)
     end
     
@@ -448,7 +446,7 @@ function GUI:createTabRobo()
             item.button.Text = item.rarity.icon .. " " .. item.rarity.short
             item.button.TextColor3 = Color3.new(0, 0, 0)
         end
-        self.Shared.Core:updateEspVisibility()
+        if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
     
     local btnNoneEsp = Instance.new("TextButton")
@@ -466,10 +464,10 @@ function GUI:createTabRobo()
         for _, item in ipairs(espButtons) do
             self.State.espFilters[item.rarity.name] = false
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "✗ " .. item.rarity.short
+            item.button.Text = " " .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
-        self.Shared.Core:updateEspVisibility()
+        if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
     
     -- Sección Módulos
@@ -515,8 +513,8 @@ function GUI:createTabRobo()
     
     local listPadding = Instance.new("UIPadding")
     listPadding.PaddingTop = UDim.new(0, 2)
-    listPadding.PaddingLeft = UDim.new(0, 2)
-    listPadding.PaddingRight = UDim.new(0, 2)
+    listPadding.PaddingLeft = UDim2.new(0, 2)
+    listPadding.PaddingRight = UDim2.new(0, 2)
     listPadding.Parent = scrollFrame
     
     -- Sección Registro de Robos
@@ -558,8 +556,8 @@ function GUI:createTabRobo()
     
     local logListPadding = Instance.new("UIPadding")
     logListPadding.PaddingTop = UDim.new(0, 2)
-    logListPadding.PaddingLeft = UDim.new(0, 2)
-    logListPadding.PaddingRight = UDim.new(0, 2)
+    logListPadding.PaddingLeft = UDim2.new(0, 2)
+    logListPadding.PaddingRight = UDim2.new(0, 2)
     logListPadding.Parent = logScroll
     
     -- Guardar referencias
@@ -572,14 +570,6 @@ function GUI:createTabRobo()
     self.GUI.btnClearLog = btnClearLog
     self.Buttons.steal = stealButtons
     self.Buttons.esp = espButtons
-end
-
-function GUI:createTabMod()
-    -- Placeholder para futura expansión
-end
-
-function GUI:createTabLog()
-    -- Placeholder para futura expansión
 end
 
 function GUI:createStatusBar()
@@ -612,7 +602,7 @@ function GUI:createStatusBar()
     statsLabel.Size = UDim2.new(0.5, -5, 1, 0)
     statsLabel.Position = UDim2.new(0.5, 0, 0, 0)
     statsLabel.BackgroundTransparency = 1
-    statsLabel.Text = " 0 | 👁️ 0 |  0s"
+    statsLabel.Text = "🥚 0 | 👁️ 0 | 🏃 0s"
     statsLabel.TextColor3 = self.Config.textSecondary
     statsLabel.TextSize = 8
     statsLabel.Font = Enum.Font.GothamBold

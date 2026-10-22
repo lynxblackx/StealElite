@@ -10,6 +10,7 @@ function Core:Init(Shared)
     self.State = Shared.State
     self.GUI = Shared.GUI
     self.Switches = Shared.Switches
+    self.Buttons = Shared.Buttons
     
     self:connectEvents()
 end
@@ -82,8 +83,8 @@ function Core:connectEvents()
         self.Switches.esp:setState(State.espEnabled)
         if not State.espEnabled then self:clearAllEsp() end
         self:updateEspVisibility()
-        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "👁️ ESP OFF")
-        self.Shared.Settings:save()
+        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "️ ESP OFF")
+        if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
     self.Switches.speed.button.MouseButton1Click:Connect(function()
@@ -97,7 +98,7 @@ function Core:connectEvents()
             end
         end
         self.Utils:log(State.speedEnabled and "🏃 Speed ON" or "🏃 Speed OFF")
-        self.Shared.Settings:save()
+        if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
     self.Switches.afk.button.MouseButton1Click:Connect(function()
@@ -105,7 +106,7 @@ function Core:connectEvents()
         self.Switches.afk:setState(State.afkEnabled)
         if State.afkEnabled then State.lastAfk = tick() end
         self.Utils:log(State.afkEnabled and "️ AFK ON" or "🛡️ AFK OFF")
-        self.Shared.Settings:save()
+        if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
     self.Switches.treadmill.button.MouseButton1Click:Connect(function()
@@ -115,7 +116,7 @@ function Core:connectEvents()
             self:leaveTreadmill()
         end
         self.Utils:log(State.treadmillEnabled and "🏃 Treadmill ON" or "🏃 Treadmill OFF")
-        self.Shared.Settings:save()
+        if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
     -- Anti-AFK input detection
@@ -203,12 +204,8 @@ function Core:StartLoops(Shared)
 end
 
 function Core:updateStats()
-    self.GUI.statsLabel.Text = string.format("🥚 %d | ️ %d | 🏃 %ds", 
+    self.GUI.statsLabel.Text = string.format("🥚 %d | 👁️ %d | 🏃 %ds", 
         self.State.stolenCount, self.State.espCount, math.floor(self.State.treadmillTime))
-end
-
-function Core:teleportTo(position, offset)
-    return self.Utils:teleportTo(position, offset)
 end
 
 function Core:tpToSpawn()
@@ -222,7 +219,7 @@ function Core:tpToSpawn()
     if not plotArea then return false end
     
     local pos = plotArea:IsA("BasePart") and plotArea.Position or plotArea:GetPivot().Position
-    return self:teleportTo(pos, Vector3.new(0, 3, 0))
+    return self.Utils:teleportTo(pos, Vector3.new(0, 3, 0))
 end
 
 function Core:stealEgg(egg)
@@ -230,7 +227,7 @@ function Core:stealEgg(egg)
     if not stealPrompt or not stealPrompt:IsA("ProximityPrompt") then
         return false
     end
-    self:teleportTo(egg.Position, Vector3.new(0, 3, 0))
+    self.Utils:teleportTo(egg.Position, Vector3.new(0, 3, 0))
     task.wait(0.2)
     return pcall(function()
         fireproximityprompt(stealPrompt)
@@ -265,14 +262,11 @@ end
 function Core:isPlayerOnTreadmill()
     local treadmillPos = self:getTreadmillPosition()
     if not treadmillPos then return false end
-    
     local character = self.Shared.Player.Character
     if not character then return false end
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return false end
-    
-    local distance = (rootPart.Position - treadmillPos).Magnitude
-    return distance < 15
+    return (rootPart.Position - treadmillPos).Magnitude < 15
 end
 
 function Core:tpToTreadmill()
@@ -282,7 +276,7 @@ function Core:tpToTreadmill()
         return false 
     end
     
-    self:teleportTo(treadmillPos, Vector3.new(0, 3, 0))
+    self.Utils:teleportTo(treadmillPos, Vector3.new(0, 3, 0))
     task.wait(0.3)
     
     local inv = self:getTreadmillPart()
@@ -606,7 +600,7 @@ function Core:createEggEntry(egg, rarity)
     btnSteal.Size = UDim2.new(0, 32, 0, 18)
     btnSteal.Position = UDim2.new(1, -36, 0, 3)
     btnSteal.BackgroundColor3 = self.Config.accentPink
-    btnSteal.Text = ""
+    btnSteal.Text = "🥷"
     btnSteal.TextColor3 = Color3.new(1, 1, 1)
     btnSteal.TextSize = 9
     btnSteal.Font = Enum.Font.GothamBold
