@@ -1,5 +1,5 @@
 -- ============================================
--- UTILIDADES
+-- UTILIDADES CON SWITCHES CORREGIDOS
 -- ============================================
 local Utils = {}
 
@@ -52,7 +52,8 @@ function Utils:createPillButton(parent, size, position, text, color, textSize)
     return btn
 end
 
-function Utils:createSwitch(parent, position, text, initialState)
+-- ✅ SWITCH CON CALLBACK CORREGIDO
+function Utils:createSwitch(parent, position, text, initialState, callback)
     local container = Instance.new("Frame")
     container.Size = UDim2.new(0, 110, 0, 28)
     container.Position = position
@@ -62,6 +63,7 @@ function Utils:createSwitch(parent, position, text, initialState)
     self:createCorner(container, 14)
     self:createStroke(container, self.Config.borderGlow, 1, 0.7)
     
+    -- Track (fondo del switch)
     local track = Instance.new("Frame")
     track.Size = UDim2.new(0, 44, 0, 20)
     track.Position = initialState and UDim2.new(1, -48, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
@@ -70,6 +72,7 @@ function Utils:createSwitch(parent, position, text, initialState)
     track.Parent = container
     self:createCorner(track, 10)
     
+    -- Thumb (bolita del switch)
     local thumb = Instance.new("Frame")
     thumb.Size = UDim2.new(0, 16, 0, 16)
     thumb.Position = initialState and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 6, 0.5, -8)
@@ -78,6 +81,7 @@ function Utils:createSwitch(parent, position, text, initialState)
     thumb.Parent = track
     self:createCorner(thumb, 8)
     
+    -- Label
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, -52, 1, 0)
     label.Position = UDim2.new(0, 8, 0, 0)
@@ -89,25 +93,40 @@ function Utils:createSwitch(parent, position, text, initialState)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = container
     
+    -- Botón invisible para clicks
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundTransparency = 1
     btn.Text = ""
     btn.Parent = container
     
-    local obj = {track = track, thumb = thumb, state = initialState}
-    obj.setState = function(self, newState)
-        self.state = newState
-        self.track.Position = newState and UDim2.new(1, -48, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
-        self.track.BackgroundColor3 = newState and self.Config.success or self.Config.textMuted
-        self.thumb.Position = newState and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 6, 0.5, -8)
-    end
+    -- Objeto del switch
+    local switchObj = {
+        container = container,
+        track = track,
+        thumb = thumb,
+        label = label,
+        button = btn,
+        state = initialState,
+        callback = callback,
+        setState = function(self, newState)
+            if self.state == newState then return end -- Evitar cambios duplicados
+            self.state = newState
+            self.track.Position = newState and UDim2.new(1, -48, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
+            self.track.BackgroundColor3 = newState and self.Config.success or self.Config.textMuted
+            self.thumb.Position = newState and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 6, 0.5, -8)
+            if self.callback then
+                self.callback(newState)
+            end
+        end
+    }
     
+    -- Click handler
     btn.MouseButton1Click:Connect(function()
-        obj:setState(not obj.state)
+        switchObj:setState(not switchObj.state)
     end)
     
-    return obj
+    return switchObj
 end
 
 function Utils:createSection(parent, size, position, title, titleColor)
@@ -222,11 +241,6 @@ end
 
 function Utils:passesEspFilter(rarity)
     return self.Shared.State.espFilters[rarity] or false
-end
-
--- ✅ NUEVO: Calcular distancia
-function Utils:getDistance(pos1, pos2)
-    return (pos1 - pos2).Magnitude
 end
 
 return Utils

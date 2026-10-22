@@ -1,5 +1,5 @@
 -- ============================================
--- CORE v16.3 - TREADMILL FIX + AUTO-DETECT
+-- CORE v16.5 - SWITCHES CON CALLBACKS
 -- ============================================
 local Core = {}
 
@@ -15,19 +15,20 @@ function Core:Init(Shared)
     self.cooldowns = {}
     self.rarityCache = {}
     
-    self:connectEvents()
+    -- ✅ Conectar eventos de UI
+    self:connectUIEvents()
     
-    -- ✅ Auto-detect al iniciar (espera 1.5s para que cargue el personaje)
+    -- ✅ Auto-detect treadmill al iniciar
     task.delay(1.5, function()
         self:autoDetectTreadmill()
     end)
 end
 
 -- ============================================
--- 🎯 AUTO-DETECT TREADMILL (3 métodos)
+-- 🎯 AUTO-DETECT TREADMILL
 -- ============================================
 function Core:autoDetectTreadmill()
-    self.Utils:log("🔍 Buscando treadmill automáticamente...")
+    self.Utils:log(" Buscando treadmill automáticamente...")
     
     local Workspace = self.Shared.Services.Workspace
     local essentials = Workspace:FindFirstChild("Essentials")
@@ -46,13 +47,12 @@ function Core:autoDetectTreadmill()
     local char = player.Character
     local myPos = char and char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.Position
     
-    -- MÉTODO 1: Buscar por Owner attribute
+    -- MÉTODO 1: Buscar por Owner
     for _, tycoon in ipairs(tycoons:GetChildren()) do
         if tycoon:IsA("Model") or tycoon:IsA("Folder") then
             local owner = tycoon:GetAttribute("Owner") 
                 or tycoon:GetAttribute("OwnerUserId")
                 or tycoon:GetAttribute("PlotOwner")
-                or tycoon:GetAttribute("owner")
             
             if owner == player.Name or owner == tostring(player.UserId) then
                 local region = tycoon:FindFirstChild("TreadmillRegion")
@@ -66,7 +66,7 @@ function Core:autoDetectTreadmill()
                         _G.MyTreadmillInv = inv
                         
                         self.Utils:log("✅ Treadmill detectado por Owner: " .. tycoon.Name)
-                        self:updateTreadmillUI(true, tycoon.Name, "Owner")
+                        self:updateTreadmillUI(true, tycoon.Name)
                         return true
                     end
                 end
@@ -74,7 +74,7 @@ function Core:autoDetectTreadmill()
         end
     end
     
-    -- MÉTODO 2: Más cercano al jugador
+    -- MÉTODO 2: Más cercano
     if myPos then
         local closest, closestDist, closestTycoon = nil, math.huge, nil
         
@@ -103,25 +103,25 @@ function Core:autoDetectTreadmill()
             _G.MyPlot = closestTycoon
             _G.MyTreadmillInv = closest.inv
             
-            self.Utils:log("✅ Treadmill detectado por distancia: " .. closestTycoon.Name .. " (" .. string.format("%.0f", closestDist) .. " studs)")
-            self:updateTreadmillUI(true, closestTycoon.Name, "Distancia")
+            self.Utils:log("✅ Treadmill detectado por distancia: " .. closestTycoon.Name)
+            self:updateTreadmillUI(true, closestTycoon.Name)
             return true
         end
     end
     
-    -- MÉTODO 3: Usar _G si ya existe
+    -- MÉTODO 3: Usar _G si existe
     if _G.MyTreadmill and _G.MyTreadmillPos and _G.MyTreadmill.Parent then
-        self.Utils:log("✅ Usando treadmill guardado en _G: " .. tostring(_G.MyPlot))
-        self:updateTreadmillUI(true, tostring(_G.MyPlot), "_G Cache")
+        self.Utils:log("✅ Usando treadmill guardado en _G")
+        self:updateTreadmillUI(true, tostring(_G.MyPlot))
         return true
     end
     
-    self.Utils:log("❌ No se pudo auto-detectar. Usa el botón 'Re-detectar'")
-    self:updateTreadmillUI(false, "No detectado", "Fallido")
+    self.Utils:log("❌ No se pudo auto-detectar")
+    self:updateTreadmillUI(false, "No detectado")
     return false
 end
 
-function Core:updateTreadmillUI(success, name, method)
+function Core:updateTreadmillUI(success, name)
     if self.GUI.treadmillInfo then
         if success then
             self.GUI.treadmillInfo.Text = "🏃 Plot: " .. name .. " ✅"
@@ -140,7 +140,6 @@ function Core:redetectTreadmill()
         self.GUI.treadmillInfo.TextColor3 = self.Config.accentGold
     end
     
-    -- Limpiar _G para forzar re-detección
     _G.MyTreadmill = nil
     _G.MyTreadmillPos = nil
     _G.MyPlot = nil
@@ -150,7 +149,7 @@ function Core:redetectTreadmill()
 end
 
 -- ============================================
--- 🏃 FUNCIONES TREADMILL
+--  FUNCIONES TREADMILL
 -- ============================================
 function Core:getTreadmillPart()
     if _G.MyTreadmill and _G.MyTreadmill.Parent then
@@ -201,11 +200,12 @@ end
 function Core:tpToTreadmill()
     local treadmillPos = self:getTreadmillPosition()
     if not treadmillPos then 
-        self.Utils:log("❌ Treadmill no encontrado")
-        self:updateTreadmillUI(false, "No detectado", "Error")
+        self.Utils:log("❌ Treadmill no encontrado - usa Re-detectar")
+        self:updateTreadmillUI(false, "No detectado")
         return false 
     end
     
+    self.Utils:log("🏃 TP a: " .. string.format("%.1f, %.1f, %.1f", treadmillPos.X, treadmillPos.Y, treadmillPos.Z))
     self.Utils:teleportTo(treadmillPos, Vector3.new(0, 3, 0))
     task.wait(0.5)
     
@@ -221,7 +221,7 @@ function Core:tpToTreadmill()
     
     self.State.onTreadmill = true
     self.Utils:log("✅ TP al Treadmill exitoso")
-    self.GUI.statusLabel.Text = "🏃 En Treadmill..."
+    self.GUI.statusLabel.Text = " En Treadmill..."
     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
     return true
 end
@@ -235,12 +235,13 @@ function Core:leaveTreadmill()
 end
 
 -- ============================================
--- 🎯 EVENTOS
+-- 🎯 EVENTOS DE UI CON CALLBACKS
 -- ============================================
-function Core:connectEvents()
+function Core:connectUIEvents()
     local GUI = self.GUI
     local State = self.State
     
+    -- Loop buttons
     GUI.btnLoop.MouseButton1Click:Connect(function()
         if not State.loopRunning then
             GUI.btnLoop.Text = "▶ LOOP ACTIVO"
@@ -256,6 +257,7 @@ function Core:connectEvents()
         if State.onTreadmill then self:leaveTreadmill() end
     end)
     
+    -- Clear log
     if GUI.btnClearLog then
         GUI.btnClearLog.MouseButton1Click:Connect(function()
             State.robLog = {}
@@ -266,23 +268,25 @@ function Core:connectEvents()
         end)
     end
     
-    -- ✅ Botón Re-detectar
+    -- Re-detect button
     if GUI.btnRedetect then
         GUI.btnRedetect.MouseButton1Click:Connect(function()
             self:redetectTreadmill()
         end)
     end
     
+    -- Delay input
     GUI.delayInput:GetPropertyChangedSignal("Text"):Connect(function()
         local clean = GUI.delayInput.Text:gsub("[^0-9.]", "")
         if clean ~= GUI.delayInput.Text then GUI.delayInput.Text = clean end
-        if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
+    -- Name filter
     GUI.nameFilter:GetPropertyChangedSignal("Text"):Connect(function()
         self:liveScan()
     end)
     
+    -- Minimize
     GUI.btnMin.MouseButton1Click:Connect(function()
         State.isMinimized = not State.isMinimized
         GUI.content.Visible = not State.isMinimized
@@ -296,6 +300,7 @@ function Core:connectEvents()
         end
     end)
     
+    -- Close
     GUI.btnClose.MouseButton1Click:Connect(function()
         State.loopRunning = false
         if State.speedEnabled then
@@ -309,48 +314,75 @@ function Core:connectEvents()
         GUI.screenGui:Destroy()
     end)
     
-    -- ✅ Switches (CONECTADOS CORRECTAMENTE)
-    self.Switches.esp.button.MouseButton1Click:Connect(function()
-        State.espEnabled = not State.espEnabled
-        self.Switches.esp:setState(State.espEnabled)
-        if not State.espEnabled then self:clearAllEsp() end
-        self:updateEspVisibility()
-        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "👁️ ESP OFF")
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
+    -- ✅ SWITCHES CON CALLBACKS (sin conflicto visual)
+    self.Switches.esp = self.Utils:createSwitch(
+        self.GUI.tabMod or self.GUI.content,
+        UDim2.new(0, 5, 0, 8),
+        "️ ESP Visual",
+        true,
+        function(newState)
+            State.espEnabled = newState
+            if not newState then self:clearAllEsp() end
+            self:updateEspVisibility()
+            self.Utils:log(newState and "👁️ ESP ON" or "👁️ ESP OFF")
+        end
+    )
     
-    self.Switches.speed.button.MouseButton1Click:Connect(function()
-        State.speedEnabled = not State.speedEnabled
-        self.Switches.speed:setState(State.speedEnabled)
-        if not State.speedEnabled then
-            local char = self.Shared.Player.Character
-            if char then
-                local hum = char:FindFirstChild("Humanoid")
-                if hum then hum.WalkSpeed = 16 end
+    self.Switches.speed = self.Utils:createSwitch(
+        self.GUI.tabMod or self.GUI.content,
+        UDim2.new(0, 5, 0, 40),
+        "🏃 Speed Boost",
+        true,
+        function(newState)
+            State.speedEnabled = newState
+            if not newState then
+                local char = self.Shared.Player.Character
+                if char then
+                    local hum = char:FindFirstChild("Humanoid")
+                    if hum then hum.WalkSpeed = 16 end
+                end
+            end
+            self.Utils:log(newState and " Speed ON" or "🏃 Speed OFF")
+        end
+    )
+    
+    self.Switches.afk = self.Utils:createSwitch(
+        self.GUI.tabMod or self.GUI.content,
+        UDim2.new(0, 5, 0, 72),
+        "🛡️ Anti-AFK",
+        true,
+        function(newState)
+            State.afkEnabled = newState
+            if newState then State.lastAfk = tick() end
+            self.Utils:log(newState and "🛡️ AFK ON" or "🛡️ AFK OFF")
+        end
+    )
+    
+    -- ✅ TREADMILL SWITCH CON CALLBACK
+    self.Switches.treadmill = self.Utils:createSwitch(
+        self.GUI.tabMod or self.GUI.content,
+        UDim2.new(0, 5, 0, 104),
+        "🏃 Auto Treadmill",
+        false,
+        function(newState)
+            State.treadmillEnabled = newState
+            if not newState and State.onTreadmill then
+                self:leaveTreadmill()
+            end
+            self.Utils:log(newState and "🏃 Treadmill ON" or " Treadmill OFF")
+            
+            -- Si se activa y no hay huevos, ir al treadmill inmediatamente
+            if newState then
+                task.spawn(function()
+                    task.wait(0.5)
+                    local filtered = self:getFilteredEggs()
+                    if #filtered == 0 then
+                        self:tpToTreadmill()
+                    end
+                end)
             end
         end
-        self.Utils:log(State.speedEnabled and "🏃 Speed ON" or "🏃 Speed OFF")
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
-    
-    self.Switches.afk.button.MouseButton1Click:Connect(function()
-        State.afkEnabled = not State.afkEnabled
-        self.Switches.afk:setState(State.afkEnabled)
-        if State.afkEnabled then State.lastAfk = tick() end
-        self.Utils:log(State.afkEnabled and "🛡️ AFK ON" or "🛡️ AFK OFF")
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
-    
-    -- ✅ TREADMILL SWITCH CONECTADO
-    self.Switches.treadmill.button.MouseButton1Click:Connect(function()
-        State.treadmillEnabled = not State.treadmillEnabled
-        self.Switches.treadmill:setState(State.treadmillEnabled)
-        if not State.treadmillEnabled and State.onTreadmill then
-            self:leaveTreadmill()
-        end
-        self.Utils:log(State.treadmillEnabled and "🏃 Treadmill ON" or "🏃 Treadmill OFF")
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
+    )
     
     -- Hotkeys
     self.Shared.Services.UserInputService.InputBegan:Connect(function(input, gpe)
@@ -358,18 +390,17 @@ function Core:connectEvents()
         if self.Shared.Services.UserInputService:GetFocusedTextBox() then return end
         
         State.lastInput = tick()
-        if State.isAfk then State.isAfk = false end
         
         if input.KeyCode == Enum.KeyCode.F1 then
             if State.loopRunning then GUI.btnStop:Fire() else GUI.btnLoop:Fire() end
         elseif input.KeyCode == Enum.KeyCode.F2 then
-            self.Switches.treadmill.button:Fire()
+            self.Switches.treadmill:setState(not self.Switches.treadmill.state)
         elseif input.KeyCode == Enum.KeyCode.F3 then
-            self.Switches.esp.button:Fire()
+            self.Switches.esp:setState(not self.Switches.esp.state)
         elseif input.KeyCode == Enum.KeyCode.F4 then
-            self.Switches.speed.button:Fire()
+            self.Switches.speed:setState(not self.Switches.speed.state)
         elseif input.KeyCode == Enum.KeyCode.F5 then
-            self.Switches.afk.button:Fire()
+            self.Switches.afk:setState(not self.Switches.afk.state)
         elseif input.KeyCode == Enum.KeyCode.F6 then
             self:applyPreset("TOP")
         elseif input.KeyCode == Enum.KeyCode.F7 then
@@ -387,14 +418,14 @@ function Core:applyPreset(type)
         elseif type == "ALL" then self.State.stealFilters[r.name] = true end
     end
     self:updateFilterUI()
-    if self.Shared.Settings then self.Shared.Settings:save() end
-    self.Utils:log("⚡ Preset aplicado: " .. type)
+    self.Utils:log(" Preset aplicado: " .. type)
 end
 
 -- ============================================
 -- 🔄 LOOPS
 -- ============================================
 function Core:StartLoops(Shared)
+    -- Speed loop
     task.spawn(function()
         while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.speedEnabled then
@@ -408,6 +439,7 @@ function Core:StartLoops(Shared)
         end
     end)
     
+    -- AFK loop
     task.spawn(function()
         while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.afkEnabled then
@@ -428,6 +460,7 @@ function Core:StartLoops(Shared)
         end
     end)
     
+    -- ESP lines loop
     task.spawn(function()
         while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.espEnabled then self:updateEspLines() end
@@ -435,6 +468,7 @@ function Core:StartLoops(Shared)
         end
     end)
     
+    -- Live scan loop
     task.spawn(function()
         while self.GUI.screenGui and self.GUI.screenGui.Parent do
             self:liveScan()
@@ -442,6 +476,7 @@ function Core:StartLoops(Shared)
         end
     end)
     
+    -- SpawnedEggs events
     local Workspace = self.Shared.Services.Workspace
     local spawnedEggsFolder = Workspace:FindFirstChild("SpawnedEggs")
     if spawnedEggsFolder then
@@ -455,6 +490,7 @@ function Core:StartLoops(Shared)
         end)
     end
     
+    -- Apply initial speed
     local character = self.Shared.Player.Character
     if character then
         local humanoid = character:FindFirstChild("Humanoid")
@@ -468,7 +504,7 @@ function Core:StartLoops(Shared)
 end
 
 function Core:updateStats()
-    self.GUI.statsLabel.Text = string.format(" %d | 👁️ %d |  %ds", 
+    self.GUI.statsLabel.Text = string.format("🥚 %d | 👁️ %d | 🏃 %ds", 
         self.State.stolenCount, self.State.espCount, math.floor(self.State.treadmillTime))
 end
 
@@ -703,7 +739,7 @@ function Core:addRobLog(eggName, rarity, weight, success)
         iconLabel.Size = UDim2.new(0, 14, 1, 0)
         iconLabel.Position = UDim2.new(0, 3, 0, 0)
         iconLabel.BackgroundTransparency = 1
-        iconLabel.Text = rob.success and "✅" or "❌"
+        iconLabel.Text = rob.success and "✅" or ""
         iconLabel.TextSize = 8
         iconLabel.Font = Enum.Font.GothamBold
         iconLabel.TextColor3 = Color3.new(1, 1, 1)
@@ -863,7 +899,7 @@ function Core:createEggEntry(egg, rarity)
     kgLabel.Size = UDim2.new(0, 40, 0, 10)
     kgLabel.Position = UDim2.new(1, -75, 0, 14)
     kgLabel.BackgroundTransparency = 1
-    kgLabel.Text = string.format("⚖️%.1fkg", weight)
+    kgLabel.Text = string.format("️%.1fkg", weight)
     kgLabel.TextColor3 = self.Config.accentGold
     kgLabel.TextSize = 7
     kgLabel.Font = Enum.Font.GothamBold
@@ -1046,7 +1082,7 @@ function Core:mainLoop()
                     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
                 end
             else
-                self.GUI.statusLabel.Text = " Esperando huevos..."
+                self.GUI.statusLabel.Text = "⏳ Esperando huevos..."
                 self.GUI.statusLabel.TextColor3 = self.Config.textSecondary
                 task.wait(2)
             end
