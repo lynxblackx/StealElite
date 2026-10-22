@@ -1,5 +1,5 @@
 -- ============================================
--- CREACIÓN DE GUI
+-- CREACIÓN DE GUI - VERSIÓN CORREGIDA
 -- ============================================
 local GUI = {}
 
@@ -17,6 +17,8 @@ function GUI:Build(Shared)
     self:createContent()
     self:createTabs()
     self:createTabRobo()
+    self:createTabMod()    -- ✅ NUEVO: Pestaña MOD con toggles
+    self:createTabLog()    -- ✅ NUEVO: Pestaña LOG
     self:createStatusBar()
 end
 
@@ -37,14 +39,6 @@ function GUI:createMainFrame()
     mainFrame.Parent = screenGui
     self.Utils:createCorner(mainFrame, 14)
     self.Utils:createStroke(mainFrame, self.Config.accentCyan, 1.5, 0.4)
-    
-    local bgGradient = Instance.new("UIGradient")
-    bgGradient.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, self.Config.bgMain),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(15, 20, 40))
-    }
-    bgGradient.Rotation = 45
-    bgGradient.Parent = mainFrame
     
     self.GUI.screenGui = screenGui
     self.GUI.mainFrame = mainFrame
@@ -76,13 +70,12 @@ function GUI:createHeader()
     logoIcon.Size = UDim2.new(0, 32, 0, 32)
     logoIcon.Position = UDim2.new(0, 8, 0, 5)
     logoIcon.BackgroundColor3 = self.Config.bgGlass
-    logoIcon.Text = "🥷"
+    logoIcon.Text = ""
     logoIcon.TextSize = 18
     logoIcon.Font = Enum.Font.GothamBold
     logoIcon.BorderSizePixel = 0
     logoIcon.Parent = header
     self.Utils:createCorner(logoIcon, 8)
-    self.Utils:createStroke(logoIcon, self.Config.accentGold, 1, 0.3)
     
     local titleLabel = Instance.new("TextLabel")
     titleLabel.Size = UDim2.new(1, -100, 1, 0)
@@ -99,7 +92,7 @@ function GUI:createHeader()
     versionLabel.Size = UDim2.new(0, 50, 0, 14)
     versionLabel.Position = UDim2.new(0, 46, 1, -18)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v15 PREMIUM"
+    versionLabel.Text = "v15.3 FIX"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 8
     versionLabel.Font = Enum.Font.GothamBold
@@ -117,7 +110,6 @@ function GUI:createHeader()
     btnMin.BorderSizePixel = 0
     btnMin.Parent = header
     self.Utils:createCorner(btnMin, 6)
-    self.Utils:createStroke(btnMin, self.Config.accentCyan, 1, 0.5)
     
     local btnClose = Instance.new("TextButton")
     btnClose.Size = UDim2.new(0, 22, 0, 22)
@@ -182,6 +174,11 @@ function GUI:createTabs()
                 tData.frame.Visible = (tName == name)
                 tData.btn.BackgroundColor3 = (tName == name) and self.Config.bgGlass or self.Config.bgMain
                 tData.btn.TextColor3 = (tName == name) and self.Config.accentCyan or self.Config.textMuted
+                local s = tData.btn:FindFirstChildOfClass("UIStroke")
+                if tName == name then
+                    if not s then self.Utils:createStroke(tData.btn, self.Config.accentCyan, 1, 0.5)
+                    else s.Color = self.Config.accentCyan end
+                elseif s then s:Destroy() end
             end
         end)
         return frame
@@ -215,7 +212,6 @@ function GUI:createTabRobo()
     btnLoop.Parent = s1
     self.Utils:createCorner(btnLoop, 8)
     self.Utils:createGradient(btnLoop, self.Config.accentPink, Color3.fromRGB(180, 50, 150), 0)
-    self.Utils:createStroke(btnLoop, self.Config.accentPink, 1, 0.3)
     
     local btnStop = Instance.new("TextButton")
     btnStop.Size = UDim2.new(0.36, -2, 0, 32)
@@ -229,7 +225,6 @@ function GUI:createTabRobo()
     btnStop.AutoButtonColor = false
     btnStop.Parent = s1
     self.Utils:createCorner(btnStop, 8)
-    self.Utils:createStroke(btnStop, self.Config.danger, 1, 0.3)
     
     local delayInput = Instance.new("TextBox")
     delayInput.Size = UDim2.new(0, 50, 0, 22)
@@ -245,7 +240,6 @@ function GUI:createTabRobo()
     delayInput.ClearTextOnFocus = false
     delayInput.Parent = s1
     self.Utils:createCorner(delayInput, 6)
-    self.Utils:createStroke(delayInput, self.Config.accentCyan, 1, 0.7)
     
     local nameFilter = Instance.new("TextBox")
     nameFilter.Size = UDim2.new(1, -62, 0, 22)
@@ -256,12 +250,11 @@ function GUI:createTabRobo()
     nameFilter.TextSize = 9
     nameFilter.Font = Enum.Font.Gotham
     nameFilter.BorderSizePixel = 0
-    nameFilter.PlaceholderText = "🔍 Filtrar por nombre..."
+    nameFilter.PlaceholderText = "🔍 Filtrar nombre..."
     nameFilter.PlaceholderColor3 = self.Config.textMuted
     nameFilter.ClearTextOnFocus = false
     nameFilter.Parent = s1
     self.Utils:createCorner(nameFilter, 6)
-    self.Utils:createStroke(nameFilter, self.Config.accentCyan, 1, 0.7)
     
     -- Presets
     local function applyPreset(type)
@@ -271,6 +264,7 @@ function GUI:createTabRobo()
             elseif type == "ALL" then self.State.stealFilters[r.name] = true end
         end
         if self.Shared.Core then self.Shared.Core:updateFilterUI() end
+        if self.Shared.Settings then self.Shared.Settings:save() end
     end
     
     local btnPresetTop = Instance.new("TextButton")
@@ -303,7 +297,7 @@ function GUI:createTabRobo()
     btnPresetAll.Size = UDim2.new(0, 108, 0, 22)
     btnPresetAll.Position = UDim2.new(0, 230, 0, 72)
     btnPresetAll.BackgroundColor3 = self.Config.success
-    btnPresetAll.Text = "🌍 ALL IN"
+    btnPresetAll.Text = " ALL IN"
     btnPresetAll.TextColor3 = Color3.new(0, 0, 0)
     btnPresetAll.TextSize = 8
     btnPresetAll.Font = Enum.Font.GothamBold
@@ -347,6 +341,7 @@ function GUI:createTabRobo()
                 btn.Text = "✗ " .. rarity.short
                 btn.TextColor3 = self.Config.textMuted
             end
+            if self.Shared.Settings then self.Shared.Settings:save() end
         end)
     end
     
@@ -368,13 +363,14 @@ function GUI:createTabRobo()
             item.button.Text = item.rarity.icon .. " " .. item.rarity.short
             item.button.TextColor3 = Color3.new(0, 0, 0)
         end
+        if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
     local btnNoneSteal = Instance.new("TextButton")
     btnNoneSteal.Size = UDim2.new(0, 55, 0, 18)
     btnNoneSteal.Position = UDim2.new(0, 64, 0, pillStartY + 2*(pillH + pillGapY) + 2)
     btnNoneSteal.BackgroundColor3 = self.Config.danger
-    btnNoneSteal.Text = "✗ NINGUNO"
+    btnNoneSteal.Text = "✗ NING"
     btnNoneSteal.TextColor3 = Color3.new(1, 1, 1)
     btnNoneSteal.TextSize = 8
     btnNoneSteal.Font = Enum.Font.GothamBold
@@ -388,9 +384,10 @@ function GUI:createTabRobo()
             item.button.Text = "✗ " .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
+        if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
-    -- Sección Filtros ESP
+    -- Filtros ESP (en pestaña ROBO también para acceso rápido)
     local s3, s3Offset = self.Utils:createSection(tabRobo,
         UDim2.new(1, 0, 0, 85),
         UDim2.new(0, 0, 0, 157),
@@ -425,6 +422,7 @@ function GUI:createTabRobo()
                 btn.TextColor3 = self.Config.textMuted
             end
             if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
+            if self.Shared.Settings then self.Shared.Settings:save() end
         end)
     end
     
@@ -453,7 +451,7 @@ function GUI:createTabRobo()
     btnNoneEsp.Size = UDim2.new(0, 55, 0, 18)
     btnNoneEsp.Position = UDim2.new(0, 64, 0, pillStartY + 2*(pillH + pillGapY) + 2)
     btnNoneEsp.BackgroundColor3 = self.Config.danger
-    btnNoneEsp.Text = " NINGUNO"
+    btnNoneEsp.Text = "✗ NING"
     btnNoneEsp.TextColor3 = Color3.new(1, 1, 1)
     btnNoneEsp.TextSize = 8
     btnNoneEsp.Font = Enum.Font.GothamBold
@@ -470,108 +468,88 @@ function GUI:createTabRobo()
         if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
     
-    -- Sección Módulos
-    local s4, s4Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 65),
-        UDim2.new(0, 0, 0, 247),
-        "⚙️ MODULOS",
-        self.Config.accentCyan)
+    -- Guardar referencias
+    self.GUI.btnLoop = btnLoop
+    self.GUI.btnStop = btnStop
+    self.GUI.delayInput = delayInput
+    self.GUI.nameFilter = nameFilter
+    self.Buttons.steal = stealButtons
+    self.Buttons.esp = espButtons
+end
+
+-- ✅ NUEVA FUNCIÓN: Pestaña MOD con toggles
+function GUI:createTabMod()
+    local tabMod = self.GUI.tabMod
     
-    local switchEsp = self.Utils:createSwitch(s4, UDim2.new(0, 0, 0, s4Offset + 4), "👁️ ESP", true)
-    local switchSpeed = self.Utils:createSwitch(s4, UDim2.new(0, 115, 0, s4Offset + 4), "🏃 Speed", true)
-    local switchAfk = self.Utils:createSwitch(s4, UDim2.new(0, 230, 0, s4Offset + 4), "️ AFK", true)
-    local switchTreadmill = self.Utils:createSwitch(s4, UDim2.new(0, 0, 0, s4Offset + 34), "🏃 Treadmill", false)
+    -- Toggles
+    local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 8), "👁️ ESP Visual", true)
+    local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 40), "🏃 Speed Boost (50)", true)
+    local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 72), "🛡️ Anti-AFK", true)
+    local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 104), "🏃 Auto Treadmill", false)
     
     self.Switches.esp = switchEsp
     self.Switches.speed = switchSpeed
     self.Switches.afk = switchAfk
     self.Switches.treadmill = switchTreadmill
     
-    -- Sección Lista de Huevos
-    local s5, s5Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 95),
-        UDim2.new(0, 0, 0, 317),
-        "🥚 HUEVOS DETECTADOS",
-        self.Config.accentGold)
-    
-    local scrollFrame = Instance.new("ScrollingFrame")
-    scrollFrame.Size = UDim2.new(1, -12, 1, -32)
-    scrollFrame.Position = UDim2.new(0, 6, 0, s5Offset + 2)
-    scrollFrame.BackgroundColor3 = self.Config.bgGlass
-    scrollFrame.BorderSizePixel = 0
-    scrollFrame.ScrollBarThickness = 3
-    scrollFrame.ScrollBarImageColor3 = self.Config.accentCyan
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
-    scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    scrollFrame.Parent = s5
-    self.Utils:createCorner(scrollFrame, 6)
-    
-    local listLayout = Instance.new("UIListLayout")
-    listLayout.Padding = UDim.new(0, 2)
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Parent = scrollFrame
-    
-    -- ✅ CORREGIDO: UDim en lugar de UDim2
-    local listPadding = Instance.new("UIPadding")
-    listPadding.PaddingTop = UDim.new(0, 2)
-    listPadding.PaddingLeft = UDim.new(0, 2)      -- ✅ CORREGIDO
-    listPadding.PaddingRight = UDim.new(0, 2)     -- ✅ CORREGIDO
-    listPadding.Parent = scrollFrame
-    
-    -- Sección Registro de Robos
-    local s6, s6Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 75),
-        UDim2.new(0, 0, 0, 417),
-        "📋 REGISTRO DE ROBOS",
-        self.Config.accentCyan)
+    -- Info de atajos
+    local hkInfo = Instance.new("TextLabel")
+    hkInfo.Size = UDim2.new(1, -10, 0, 80)
+    hkInfo.Position = UDim2.new(0, 5, 0, 140)
+    hkInfo.BackgroundColor3 = self.Config.bgGlass
+    hkInfo.BorderSizePixel = 0
+    hkInfo.Text = "⌨️ ATAJOS DE TECLADO:\n\nF1: Loop | F2: Treadmill | F3: ESP\nF4: Speed | F5: AFK\nF6: TOP | F7: LEG+ | F8: ALL"
+    hkInfo.TextColor3 = self.Config.textMuted
+    hkInfo.TextSize = 8
+    hkInfo.Font = Enum.Font.Code
+    hkInfo.TextXAlignment = Enum.TextXAlignment.Left
+    hkInfo.TextYAlignment = Enum.TextYAlignment.Top
+    hkInfo.Parent = tabMod
+    self.Utils:createCorner(hkInfo, 6)
+    self.Utils:createStroke(hkInfo, self.Config.accentCyan, 1, 0.5)
+end
+
+-- ✅ NUEVA FUNCIÓN: Pestaña LOG
+function GUI:createTabLog()
+    local tabLog = self.GUI.tabLog
     
     local btnClearLog = Instance.new("TextButton")
-    btnClearLog.Size = UDim2.new(0, 50, 0, 16)
-    btnClearLog.Position = UDim2.new(1, -56, 0, 6)
+    btnClearLog.Size = UDim2.new(0, 60, 0, 20)
+    btnClearLog.Position = UDim2.new(1, -65, 0, 5)
     btnClearLog.BackgroundColor3 = self.Config.bgGlass
-    btnClearLog.Text = "️ Limpiar"
+    btnClearLog.Text = "🗑️ Limpiar"
     btnClearLog.TextColor3 = self.Config.textSecondary
-    btnClearLog.TextSize = 7
+    btnClearLog.TextSize = 8
     btnClearLog.Font = Enum.Font.GothamBold
     btnClearLog.BorderSizePixel = 0
-    btnClearLog.Parent = s6
-    self.Utils:createCorner(btnClearLog, 4)
-    self.Utils:createStroke(btnClearLog, self.Config.accentCyan, 1, 0.7)
+    btnClearLog.Parent = tabLog
+    self.Utils:createCorner(btnClearLog, 5)
     
     local logScroll = Instance.new("ScrollingFrame")
-    logScroll.Size = UDim2.new(1, -12, 1, -32)
-    logScroll.Position = UDim2.new(0, 6, 0, s6Offset + 2)
+    logScroll.Size = UDim2.new(1, -10, 1, -30)
+    logScroll.Position = UDim2.new(0, 5, 0, 30)
     logScroll.BackgroundColor3 = self.Config.bgGlass
     logScroll.BorderSizePixel = 0
     logScroll.ScrollBarThickness = 3
     logScroll.ScrollBarImageColor3 = self.Config.accentCyan
     logScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
     logScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    logScroll.Parent = s6
+    logScroll.Parent = tabLog
     self.Utils:createCorner(logScroll, 6)
     
     local logListLayout = Instance.new("UIListLayout")
-    logListLayout.Padding = UDim.new(0, 1)
+    logListLayout.Padding = UDim.new(0, 2)
     logListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     logListLayout.Parent = logScroll
     
-    -- ✅ CORREGIDO: UDim en lugar de UDim2
     local logListPadding = Instance.new("UIPadding")
-    logListPadding.PaddingTop = UDim.new(0, 2)
-    logListPadding.PaddingLeft = UDim.new(0, 2)      -- ✅ CORREGIDO
-    logListPadding.PaddingRight = UDim.new(0, 2)     -- ✅ CORREGIDO
+    logListPadding.PaddingTop = UDim.new(0, 3)
+    logListPadding.PaddingLeft = UDim.new(0, 3)
+    logListPadding.PaddingRight = UDim.new(0, 3)
     logListPadding.Parent = logScroll
     
-    -- Guardar referencias
-    self.GUI.btnLoop = btnLoop
-    self.GUI.btnStop = btnStop
-    self.GUI.delayInput = delayInput
-    self.GUI.nameFilter = nameFilter
-    self.GUI.scrollFrame = scrollFrame
     self.GUI.logScroll = logScroll
     self.GUI.btnClearLog = btnClearLog
-    self.Buttons.steal = stealButtons
-    self.Buttons.esp = espButtons
 end
 
 function GUI:createStatusBar()

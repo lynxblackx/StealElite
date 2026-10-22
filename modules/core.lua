@@ -1,5 +1,5 @@
 -- ============================================
--- LÓGICA PRINCIPAL: ESP, TREADMILL, ROBO, LOOPS
+-- LÓGICA PRINCIPAL - VERSIÓN CORREGIDA
 -- ============================================
 local Core = {}
 
@@ -34,13 +34,15 @@ function Core:connectEvents()
         if State.onTreadmill then self:leaveTreadmill() end
     end)
     
-    GUI.btnClearLog.MouseButton1Click:Connect(function()
-        State.robLog = {}
-        for _, child in pairs(GUI.logScroll:GetChildren()) do
-            if child:IsA("Frame") then child:Destroy() end
-        end
-        self.Utils:log("📋 Registro limpiado")
-    end)
+    if GUI.btnClearLog then
+        GUI.btnClearLog.MouseButton1Click:Connect(function()
+            State.robLog = {}
+            for _, child in pairs(GUI.logScroll:GetChildren()) do
+                if child:IsA("Frame") then child:Destroy() end
+            end
+            self.Utils:log("📋 Registro limpiado")
+        end)
+    end
     
     GUI.delayInput:GetPropertyChangedSignal("Text"):Connect(function()
         local clean = GUI.delayInput.Text:gsub("[^0-9.]", "")
@@ -77,13 +79,13 @@ function Core:connectEvents()
         GUI.screenGui:Destroy()
     end)
     
-    -- Switches
+    -- ✅ Switches con save
     self.Switches.esp.button.MouseButton1Click:Connect(function()
         State.espEnabled = not State.espEnabled
         self.Switches.esp:setState(State.espEnabled)
         if not State.espEnabled then self:clearAllEsp() end
         self:updateEspVisibility()
-        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "️ ESP OFF")
+        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "👁️ ESP OFF")
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
@@ -105,7 +107,7 @@ function Core:connectEvents()
         State.afkEnabled = not State.afkEnabled
         self.Switches.afk:setState(State.afkEnabled)
         if State.afkEnabled then State.lastAfk = tick() end
-        self.Utils:log(State.afkEnabled and "🛡️ AFK ON" or "🛡️ AFK OFF")
+        self.Utils:log(State.afkEnabled and "️ AFK ON" or "🛡️ AFK OFF")
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
@@ -115,15 +117,46 @@ function Core:connectEvents()
         if not State.treadmillEnabled and State.onTreadmill then
             self:leaveTreadmill()
         end
-        self.Utils:log(State.treadmillEnabled and " Treadmill ON" or "🏃 Treadmill OFF")
+        self.Utils:log(State.treadmillEnabled and "🏃 Treadmill ON" or "🏃 Treadmill OFF")
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
-    -- Anti-AFK input detection
-    self.Shared.Services.UserInputService.InputBegan:Connect(function(input)
+    self.Shared.Services.UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if self.Shared.Services.UserInputService:GetFocusedTextBox() then return end
+        
         State.lastInput = tick()
         if State.isAfk then State.isAfk = false end
+        
+        if input.KeyCode == Enum.KeyCode.F1 then
+            if State.loopRunning then GUI.btnStop:Fire() else GUI.btnLoop:Fire() end
+        elseif input.KeyCode == Enum.KeyCode.F2 then
+            self.Switches.treadmill.button:Fire()
+        elseif input.KeyCode == Enum.KeyCode.F3 then
+            self.Switches.esp.button:Fire()
+        elseif input.KeyCode == Enum.KeyCode.F4 then
+            self.Switches.speed.button:Fire()
+        elseif input.KeyCode == Enum.KeyCode.F5 then
+            self.Switches.afk.button:Fire()
+        elseif input.KeyCode == Enum.KeyCode.F6 then
+            self:applyPreset("TOP")
+        elseif input.KeyCode == Enum.KeyCode.F7 then
+            self:applyPreset("LEG")
+        elseif input.KeyCode == Enum.KeyCode.F8 then
+            self:applyPreset("ALL")
+        end
     end)
+end
+
+function Core:applyPreset(type)
+    for _, r in ipairs(self.Shared.Rarities) do
+        if type == "TOP" then self.State.stealFilters[r.name] = (r.name == "God" or r.name == "Exclusive" or r.name == "OG")
+        elseif type == "LEG" then self.State.stealFilters[r.name] = (r.priority >= 6)
+        elseif type == "ALL" then self.State.stealFilters[r.name] = true end
+    end
+    self:updateFilterUI()
+    if self.Shared.Settings then self.Shared.Settings:save() end
+    self.Utils:log("⚡ Preset aplicado: " .. type)
 end
 
 function Core:StartLoops(Shared)
@@ -178,7 +211,7 @@ function Core:StartLoops(Shared)
         end
     end)
     
-    -- ✅ CORREGIDO: Usar Services.Workspace en lugar de Workspace
+    -- SpawnedEggs events
     local spawnedEggsFolder = self.Shared.Services.Workspace:FindFirstChild("SpawnedEggs")
     if spawnedEggsFolder then
         spawnedEggsFolder.ChildAdded:Connect(function()
@@ -201,6 +234,7 @@ function Core:StartLoops(Shared)
     self.GUI.statusLabel.Text = "✅ Listo - Presiona INICIAR LOOP"
     self.GUI.statusLabel.TextColor3 = self.Config.success
     self:updateStats()
+    self:updateFilterUI()
 end
 
 function Core:updateStats()
@@ -209,7 +243,6 @@ function Core:updateStats()
 end
 
 function Core:tpToSpawn()
-    -- ✅ CORREGIDO: Usar Services.Workspace
     local essentials = self.Shared.Services.Workspace:FindFirstChild("Essentials")
     if not essentials then return false end
     local tycoons = essentials:FindFirstChild("Tycoons")
@@ -226,18 +259,20 @@ end
 function Core:stealEgg(egg)
     local stealPrompt = egg:FindFirstChild("Steal")
     if not stealPrompt or not stealPrompt:IsA("ProximityPrompt") then
+        self.Utils:log("⚠️ No Steal prompt en " .. egg.Name)
         return false
     end
     self.Utils:teleportTo(egg.Position, Vector3.new(0, 3, 0))
     task.wait(0.2)
-    return pcall(function()
+    local ok, err = pcall(function()
         fireproximityprompt(stealPrompt)
     end)
+    if not ok then self.Utils:log("❌ Error: " .. tostring(err)) end
+    return ok
 end
 
 -- TREADMILL
 function Core:getTreadmillPart()
-    -- ✅ CORREGIDO: Usar Services.Workspace
     local essentials = self.Shared.Services.Workspace:FindFirstChild("Essentials")
     if not essentials then return nil end
     local tycoons = essentials:FindFirstChild("Tycoons")
@@ -268,7 +303,7 @@ function Core:isPlayerOnTreadmill()
     if not character then return false end
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return false end
-    return (rootPart.Position - treadmillPos).Magnitude < 15
+    return (rootPart.Position - treadmillPos).Magnitude < 20
 end
 
 function Core:tpToTreadmill()
@@ -293,7 +328,7 @@ function Core:tpToTreadmill()
     
     self.State.onTreadmill = true
     self.Utils:log("🏃 TP al Treadmill")
-    self.GUI.statusLabel.Text = " En Treadmill..."
+    self.GUI.statusLabel.Text = "🏃 En Treadmill..."
     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
     return true
 end
@@ -354,7 +389,7 @@ function Core:createEsp(egg, rarity)
     nameLabel.Size = UDim2.new(1, -8, 0, 16)
     nameLabel.Position = UDim2.new(0, 4, 0, 2)
     nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = " " .. egg.Name
+    nameLabel.Text = "🥚 " .. egg.Name
     nameLabel.TextColor3 = Color3.new(1, 1, 1)
     nameLabel.TextSize = 11
     nameLabel.Font = Enum.Font.GothamBold
@@ -376,7 +411,7 @@ function Core:createEsp(egg, rarity)
     kgLabel.Size = UDim2.new(1, -8, 0, 14)
     kgLabel.Position = UDim2.new(0, 4, 0, 32)
     kgLabel.BackgroundTransparency = 1
-    kgLabel.Text = string.format("⚖️ %.2f kg", weight)
+    kgLabel.Text = string.format("️ %.2f kg", weight)
     kgLabel.TextColor3 = self.Config.accentGold
     kgLabel.TextSize = 9
     kgLabel.Font = Enum.Font.Gotham
@@ -394,7 +429,6 @@ function Core:createEsp(egg, rarity)
     linePart.Color = color
     linePart.Transparency = 0.3
     linePart.Size = Vector3.new(0.1, 0.1, 1)
-    -- ✅ CORREGIDO: Usar Services.Workspace
     linePart.Parent = self.Shared.Services.Workspace
     esp.line = linePart
     
@@ -438,7 +472,7 @@ function Core:clearAllEsp()
     self.State.espCount = 0
 end
 
--- REGISTRO DE ROBOS
+-- ✅ REGISTRO DE ROBOS CORREGIDO
 function Core:addRobLog(eggName, rarity, weight, success)
     local time = os.date("%H:%M:%S")
     local color = self.Utils:getRarityColor(rarity)
@@ -450,69 +484,70 @@ function Core:addRobLog(eggName, rarity, weight, success)
     
     if #self.State.robLog > 20 then table.remove(self.State.robLog, 21) end
     
+    -- Limpiar log anterior
     for _, child in pairs(self.GUI.logScroll:GetChildren()) do
         if child:IsA("Frame") then child:Destroy() end
     end
     
+    -- Crear entradas
     for i, rob in ipairs(self.State.robLog) do
-        if i > 6 then break end
+        if i > 10 then break end
         
         local entry = Instance.new("Frame")
-        entry.Size = UDim2.new(1, 0, 0, 13)
+        entry.Size = UDim2.new(1, 0, 0, 16)
         entry.BackgroundColor3 = rob.success and Color3.fromRGB(20, 35, 30) or Color3.fromRGB(35, 20, 25)
         entry.BorderSizePixel = 0
         entry.LayoutOrder = i
         entry.Parent = self.GUI.logScroll
-        self.Utils:createCorner(entry, 3)
+        self.Utils:createCorner(entry, 4)
         
-        local icon = rob.success and "✅" or "❌"
         local iconLabel = Instance.new("TextLabel")
-        iconLabel.Size = UDim2.new(0, 14, 1, 0)
+        iconLabel.Size = UDim2.new(0, 16, 1, 0)
         iconLabel.Position = UDim2.new(0, 3, 0, 0)
         iconLabel.BackgroundTransparency = 1
-        iconLabel.Text = icon
-        iconLabel.TextSize = 8
+        iconLabel.Text = rob.success and "✅" or "❌"
+        iconLabel.TextSize = 9
         iconLabel.Font = Enum.Font.GothamBold
         iconLabel.TextColor3 = Color3.new(1, 1, 1)
         iconLabel.TextXAlignment = Enum.TextXAlignment.Left
         iconLabel.Parent = entry
         
         local nameLabel = Instance.new("TextLabel")
-        nameLabel.Size = UDim2.new(0, 75, 1, 0)
-        nameLabel.Position = UDim2.new(0, 18, 0, 0)
+        nameLabel.Size = UDim2.new(0, 80, 1, 0)
+        nameLabel.Position = UDim2.new(0, 20, 0, 0)
         nameLabel.BackgroundTransparency = 1
         nameLabel.Text = rob.name
-        nameLabel.TextSize = 8
+        nameLabel.TextSize = 9
         nameLabel.Font = Enum.Font.GothamBold
         nameLabel.TextColor3 = Color3.new(1, 1, 1)
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
         nameLabel.Parent = entry
         
         local rarityLabel = Instance.new("TextLabel")
-        rarityLabel.Size = UDim2.new(0, 50, 1, 0)
-        rarityLabel.Position = UDim2.new(0, 95, 0, 0)
+        rarityLabel.Size = UDim2.new(0, 55, 1, 0)
+        rarityLabel.Position = UDim2.new(0, 102, 0, 0)
         rarityLabel.BackgroundTransparency = 1
         rarityLabel.Text = rob.rarity
-        rarityLabel.TextSize = 7
+        rarityLabel.TextSize = 8
         rarityLabel.Font = Enum.Font.GothamBold
         rarityLabel.TextColor3 = rob.color
         rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
         rarityLabel.Parent = entry
         
         local kgLabel = Instance.new("TextLabel")
-        kgLabel.Size = UDim2.new(0, 40, 1, 0)
-        kgLabel.Position = UDim2.new(0, 147, 0, 0)
+        kgLabel.Size = UDim2.new(0, 45, 1, 0)
+        kgLabel.Position = UDim2.new(0, 158, 0, 0)
         kgLabel.BackgroundTransparency = 1
         kgLabel.Text = string.format("%.1fkg", rob.weight)
-        kgLabel.TextSize = 7
+        kgLabel.TextSize = 8
         kgLabel.Font = Enum.Font.Gotham
         kgLabel.TextColor3 = self.Config.accentGold
         kgLabel.TextXAlignment = Enum.TextXAlignment.Left
         kgLabel.Parent = entry
         
         local timeLabel = Instance.new("TextLabel")
-        timeLabel.Size = UDim2.new(0, 40, 1, 0)
-        timeLabel.Position = UDim2.new(1, -42, 0, 0)
+        timeLabel.Size = UDim2.new(0, 45, 1, 0)
+        timeLabel.Position = UDim2.new(1, -48, 0, 0)
         timeLabel.BackgroundTransparency = 1
         timeLabel.Text = rob.time
         timeLabel.TextSize = 7
@@ -521,26 +556,13 @@ function Core:addRobLog(eggName, rarity, weight, success)
         timeLabel.TextXAlignment = Enum.TextXAlignment.Right
         timeLabel.Parent = entry
     end
+    
+    self.Utils:log(" Log actualizado: " .. eggName .. " [" .. rarity .. "]")
 end
 
 -- CREAR ENTRADA EN LISTA
 function Core:createEggEntry(egg, rarity)
-    if self.State.eggEntries[egg] then
-        local entry = self.State.eggEntries[egg]
-        local rarityLabel = entry:FindFirstChild("RarityLabel")
-        local kgLabel = entry:FindFirstChild("KgLabel")
-        if rarityLabel and rarityLabel.Text ~= rarity then
-            local color = self.Utils:getRarityColor(rarity)
-            rarityLabel.Text = rarity
-            rarityLabel.TextColor3 = color
-            local rarityBar = entry:FindFirstChild("RarityBar")
-            if rarityBar then rarityBar.BackgroundColor3 = color end
-        end
-        if kgLabel then
-            kgLabel.Text = string.format("%.1fkg", self.Utils:getEggWeight(egg))
-        end
-        return
-    end
+    if self.State.eggEntries[egg] then return end
     
     local color = self.Utils:getRarityColor(rarity)
     local weight = self.Utils:getEggWeight(egg)
@@ -599,44 +621,11 @@ function Core:createEggEntry(egg, rarity)
     kgLabel.TextXAlignment = Enum.TextXAlignment.Right
     kgLabel.Parent = entry
     
-    local btnSteal = Instance.new("TextButton")
-    btnSteal.Size = UDim2.new(0, 32, 0, 18)
-    btnSteal.Position = UDim2.new(1, -36, 0, 3)
-    btnSteal.BackgroundColor3 = self.Config.accentPink
-    btnSteal.Text = ""
-    btnSteal.TextColor3 = Color3.new(1, 1, 1)
-    btnSteal.TextSize = 9
-    btnSteal.Font = Enum.Font.GothamBold
-    btnSteal.BorderSizePixel = 0
-    btnSteal.Parent = entry
-    self.Utils:createCorner(btnSteal, 4)
-    
-    btnSteal.MouseButton1Click:Connect(function()
-        self.GUI.statusLabel.Text = "🥷 " .. egg.Name
-        self.GUI.statusLabel.TextColor3 = self.Config.accentGold
-        local success = self:stealEgg(egg)
-        if success then
-            self.State.stolenCount = self.State.stolenCount + 1
-            self.GUI.statusLabel.Text = "✅ " .. egg.Name
-            self.GUI.statusLabel.TextColor3 = self.Config.success
-            self:tpToSpawn()
-            self:addRobLog(egg.Name, rarity, weight, true)
-            self.Utils:log("✅ " .. egg.Name .. " [" .. rarity .. "]")
-        else
-            self.State.failedCount = self.State.failedCount + 1
-            self.GUI.statusLabel.Text = "❌ " .. egg.Name
-            self.GUI.statusLabel.TextColor3 = self.Config.danger
-            self:addRobLog(egg.Name, rarity, weight, false)
-        end
-        self:updateStats()
-    end)
-    
     self.State.eggEntries[egg] = entry
 end
 
--- LIVE SCAN
+-- ✅ LIVE SCAN CORREGIDO
 function Core:liveScan()
-    -- ✅ CORREGIDO: Usar Services.Workspace
     local spawnedEggs = self.Shared.Services.Workspace:FindFirstChild("SpawnedEggs")
     if not spawnedEggs then return end
     
@@ -682,25 +671,27 @@ function Core:liveScan()
     
     self:updateEspVisibility()
     
-    self.State.eggs = {}
-    for _, eggData in ipairs(newEggs) do
-        table.insert(self.State.eggs, eggData.egg)
-    end
-    
+    self.State.eggs = newEggs
     self:updateStats()
 end
 
+-- ✅ FILTRADO CORREGIDO - Aquí estaba el bug principal
 function Core:getFilteredEggs()
     local filterText = self.GUI.nameFilter.Text:lower()
     local filtered = {}
     
-    for _, egg in ipairs(self.State.eggs) do
+    for _, eggData in ipairs(self.State.eggs) do
+        local egg = eggData.egg
+        local rarity = eggData.rarity
+        
+        -- Filtro por nombre
         local nameMatch = filterText == "" or egg.Name:lower():find(filterText)
-        if nameMatch then
-            local rarity = self.Utils:detectRarity(egg)
-            if self.Utils:passesStealFilter(rarity) then
-                table.insert(filtered, {egg = egg, rarity = rarity})
-            end
+        
+        -- ✅ Filtro por rareza (este era el bug)
+        local rarityMatch = self.Utils:passesStealFilter(rarity)
+        
+        if nameMatch and rarityMatch then
+            table.insert(filtered, eggData)
         end
     end
     
@@ -715,7 +706,7 @@ function Core:updateFilterUI()
             item.button.TextColor3 = Color3.new(0, 0, 0)
         else
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "✗ " .. item.rarity.short
+            item.button.Text = " " .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
     end
@@ -777,7 +768,7 @@ function Core:performAfkAction()
     return success
 end
 
--- LOOP PRINCIPAL
+-- ✅ LOOP PRINCIPAL CORREGIDO
 function Core:mainLoop()
     self.State.loopRunning = true
     self.Utils:log("🔄 LOOP INICIADO")
@@ -790,12 +781,14 @@ function Core:mainLoop()
         self:liveScan()
         local filteredEggs = self:getFilteredEggs()
         
+        self.Utils:log("📊 Huevos totales: " .. #self.State.eggs .. " | Filtrados: " .. #filteredEggs)
+        
         if #filteredEggs > 0 then
             if self.State.onTreadmill then
                 self:leaveTreadmill()
             end
             
-            self.GUI.statusLabel.Text = string.format("🎯 %d huevos encontrados", #filteredEggs)
+            self.GUI.statusLabel.Text = string.format("🎯 %d huevos para robar", #filteredEggs)
             self.GUI.statusLabel.TextColor3 = self.Config.accentGold
             
             for i, eggData in ipairs(filteredEggs) do
@@ -815,18 +808,19 @@ function Core:mainLoop()
                     egg.Name, rarity, weight, i, #filteredEggs)
                 self.GUI.statusLabel.TextColor3 = self.Config.accentPink
                 
+                self.Utils:log("🥷 Robando: " .. egg.Name .. " [" .. rarity .. "]")
                 local success = self:stealEgg(egg)
                 
                 if success then
                     self.State.stolenCount = self.State.stolenCount + 1
-                    self:addRobLog(egg.Name, rarity, weight, true)
-                    self.Utils:log(string.format("✅ %s [%s] %.1fkg", egg.Name, rarity, weight))
+                    self:addRobLog(egg.Name, rarity, weight, true)  -- ✅ Log agregado
+                    self.Utils:log("✅ Robado: " .. egg.Name)
                     self:tpToSpawn()
                     task.wait(0.5)
                 else
                     self.State.failedCount = self.State.failedCount + 1
-                    self:addRobLog(egg.Name, rarity, weight, false)
-                    self.Utils:log(string.format("❌ %s [%s]", egg.Name, rarity))
+                    self:addRobLog(egg.Name, rarity, weight, false)  -- ✅ Log agregado
+                    self.Utils:log("❌ Falló: " .. egg.Name)
                 end
                 
                 self:updateStats()
@@ -835,13 +829,12 @@ function Core:mainLoop()
         else
             if self.State.treadmillEnabled then
                 if not self.State.onTreadmill then
+                    self.Utils:log("🏃 Yendo al treadmill")
                     self:tpToTreadmill()
                 end
                 
-                local waitTime = 0
                 while self.State.loopRunning and self.GUI.screenGui.Parent and self.State.treadmillEnabled do
                     task.wait(self.Config.treadmillCheckInterval)
-                    waitTime = waitTime + self.Config.treadmillCheckInterval
                     self.State.treadmillTime = self.State.treadmillTime + self.Config.treadmillCheckInterval
                     self:updateStats()
                     
@@ -849,6 +842,7 @@ function Core:mainLoop()
                     local newFiltered = self:getFilteredEggs()
                     
                     if #newFiltered > 0 then
+                        self.Utils:log("🎯 Aparecieron " .. #newFiltered .. " huevos")
                         self:leaveTreadmill()
                         break
                     end
@@ -857,11 +851,11 @@ function Core:mainLoop()
                         self:tpToTreadmill()
                     end
                     
-                    self.GUI.statusLabel.Text = string.format("🏃 Treadmill %.0fs - Esperando huevos...", self.State.treadmillTime)
+                    self.GUI.statusLabel.Text = string.format("🏃 Treadmill %.0fs", self.State.treadmillTime)
                     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
                 end
             else
-                self.GUI.statusLabel.Text = " Esperando huevos..."
+                self.GUI.statusLabel.Text = "⏳ Esperando huevos..."
                 self.GUI.statusLabel.TextColor3 = self.Config.textSecondary
                 task.wait(2)
             end
