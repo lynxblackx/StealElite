@@ -256,7 +256,7 @@ function GUI:createTabRobo()
     nameFilter.TextSize = 9
     nameFilter.Font = Enum.Font.Gotham
     nameFilter.BorderSizePixel = 0
-    nameFilter.PlaceholderText = " Filtrar por nombre..."
+    nameFilter.PlaceholderText = "🔍 Filtrar por nombre..."
     nameFilter.PlaceholderColor3 = self.Config.textMuted
     nameFilter.ClearTextOnFocus = false
     nameFilter.Parent = s1
@@ -277,7 +277,7 @@ function GUI:createTabRobo()
     btnPresetTop.Size = UDim2.new(0, 108, 0, 22)
     btnPresetTop.Position = UDim2.new(0, 6, 0, 72)
     btnPresetTop.BackgroundColor3 = self.Config.accentGold
-    btnPresetTop.Text = " TOP (GOD+EXC+OG)"
+    btnPresetTop.Text = "👑 TOP (GOD+EXC+OG)"
     btnPresetTop.TextColor3 = Color3.new(0, 0, 0)
     btnPresetTop.TextSize = 8
     btnPresetTop.Font = Enum.Font.GothamBold
@@ -385,7 +385,7 @@ function GUI:createTabRobo()
         for _, item in ipairs(stealButtons) do
             self.State.stealFilters[item.rarity.name] = false
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = " " .. item.rarity.short
+            item.button.Text = "✗ " .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
     end)
@@ -464,7 +464,7 @@ function GUI:createTabRobo()
         for _, item in ipairs(espButtons) do
             self.State.espFilters[item.rarity.name] = false
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = " " .. item.rarity.short
+            item.button.Text = "✗ " .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
         if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
@@ -477,7 +477,7 @@ function GUI:createTabRobo()
         "⚙️ MODULOS",
         self.Config.accentCyan)
     
-    local switchEsp = self.Utils:createSwitch(s4, UDim2.new(0, 0, 0, s4Offset + 4), "️ ESP", true)
+    local switchEsp = self.Utils:createSwitch(s4, UDim2.new(0, 0, 0, s4Offset + 4), "👁️ ESP", true)
     local switchSpeed = self.Utils:createSwitch(s4, UDim2.new(0, 115, 0, s4Offset + 4), "🏃 Speed", true)
     local switchAfk = self.Utils:createSwitch(s4, UDim2.new(0, 230, 0, s4Offset + 4), "🛡️ AFK", true)
     local switchTreadmill = self.Utils:createSwitch(s4, UDim2.new(0, 0, 0, s4Offset + 34), "🏃 Treadmill", false)
@@ -511,10 +511,11 @@ function GUI:createTabRobo()
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
     listLayout.Parent = scrollFrame
     
+    -- ✅ CORREGIDO: UDim en lugar de UDim2
     local listPadding = Instance.new("UIPadding")
     listPadding.PaddingTop = UDim.new(0, 2)
-    listPadding.PaddingLeft = UDim2.new(0, 2)
-    listPadding.PaddingRight = UDim2.new(0, 2)
+    listPadding.PaddingLeft = UDim.new(0, 2)      -- ✅ CORREGIDO
+    listPadding.PaddingRight = UDim.new(0, 2)     -- ✅ CORREGIDO
     listPadding.Parent = scrollFrame
     
     -- Sección Registro de Robos
@@ -528,7 +529,7 @@ function GUI:createTabRobo()
     btnClearLog.Size = UDim2.new(0, 50, 0, 16)
     btnClearLog.Position = UDim2.new(1, -56, 0, 6)
     btnClearLog.BackgroundColor3 = self.Config.bgGlass
-    btnClearLog.Text = "🗑️ Limpiar"
+    btnClearLog.Text = "️ Limpiar"
     btnClearLog.TextColor3 = self.Config.textSecondary
     btnClearLog.TextSize = 7
     btnClearLog.Font = Enum.Font.GothamBold
@@ -554,10 +555,11 @@ function GUI:createTabRobo()
     logListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     logListLayout.Parent = logScroll
     
+    -- ✅ CORREGIDO: UDim en lugar de UDim2
     local logListPadding = Instance.new("UIPadding")
     logListPadding.PaddingTop = UDim.new(0, 2)
-    logListPadding.PaddingLeft = UDim2.new(0, 2)
-    logListPadding.PaddingRight = UDim2.new(0, 2)
+    logListPadding.PaddingLeft = UDim.new(0, 2)      -- ✅ CORREGIDO
+    logListPadding.PaddingRight = UDim.new(0, 2)     -- ✅ CORREGIDO
     logListPadding.Parent = logScroll
     
     -- Guardar referencias
@@ -602,7 +604,7 @@ function GUI:createStatusBar()
     statsLabel.Size = UDim2.new(0.5, -5, 1, 0)
     statsLabel.Position = UDim2.new(0.5, 0, 0, 0)
     statsLabel.BackgroundTransparency = 1
-    statsLabel.Text = "🥚 0 | 👁️ 0 | 🏃 0s"
+    statsLabel.Text = " 0 | 👁️ 0 |  0s"
     statsLabel.TextColor3 = self.Config.textSecondary
     statsLabel.TextSize = 8
     statsLabel.Font = Enum.Font.GothamBold
