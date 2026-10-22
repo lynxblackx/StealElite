@@ -1,5 +1,5 @@
 -- ============================================
--- GUI v16.3 - FIX TREADMILL + TEXTO
+-- GUI v16.3 - COMPLETO CON TODAS LAS PESTAÑAS
 -- ============================================
 local GUI = {}
 
@@ -184,7 +184,7 @@ function GUI:createTabs()
         return frame
     end
     
-    self.GUI.tabRobo = createTab("ROBO", " ROBO", 2)
+    self.GUI.tabRobo = createTab("ROBO", "🎯 ROBO", 2)
     self.GUI.tabMod = createTab("MOD", "⚙️ MOD", 122)
     self.GUI.tabLog = createTab("LOG", "📋 LOG", 242)
 end
@@ -479,12 +479,12 @@ function GUI:createTabRobo()
     self.Buttons.esp = espButtons
 end
 
--- ✅ PESTAÑA MOD CORREGIDA
+-- ✅ PESTAÑA MOD (NUEVA)
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
     -- Toggles
-    local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 8), "️ ESP Visual", true)
+    local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 8), "👁️ ESP Visual", true)
     local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 40), "🏃 Speed Boost", true)
     local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 72), "🛡️ Anti-AFK", true)
     local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 104), "🏃 Auto Treadmill", false)
@@ -494,19 +494,19 @@ function GUI:createTabMod()
     self.Switches.afk = switchAfk
     self.Switches.treadmill = switchTreadmill
     
-    -- ✅ Indicador de Treadmill
+    -- Indicador de Treadmill
     local treadmillInfo = Instance.new("TextLabel")
     treadmillInfo.Size = UDim2.new(1, -10, 0, 16)
     treadmillInfo.Position = UDim2.new(0, 5, 0, 136)
     treadmillInfo.BackgroundTransparency = 1
-    treadmillInfo.Text = " Treadmill: Buscando..."
+    treadmillInfo.Text = "🏃 Treadmill: Buscando..."
     treadmillInfo.TextColor3 = self.Config.textMuted
     treadmillInfo.TextSize = 9
     treadmillInfo.Font = Enum.Font.GothamBold
     treadmillInfo.TextXAlignment = Enum.TextXAlignment.Left
     treadmillInfo.Parent = tabMod
     
-    -- ✅ Botón Re-detectar
+    -- Botón Re-detectar
     local btnRedetect = Instance.new("TextButton")
     btnRedetect.Size = UDim2.new(1, -10, 0, 22)
     btnRedetect.Position = UDim2.new(0, 5, 0, 154)
@@ -519,7 +519,7 @@ function GUI:createTabMod()
     btnRedetect.Parent = tabMod
     self.Utils:createCorner(btnRedetect, 5)
     
-    -- ✅ Info de atajos CORREGIDA (texto más grande y legible)
+    -- Info de atajos
     local hkInfo = Instance.new("TextLabel")
     hkInfo.Size = UDim2.new(1, -10, 0, 100)
     hkInfo.Position = UDim2.new(0, 5, 0, 184)
@@ -535,12 +535,11 @@ function GUI:createTabMod()
     self.Utils:createCorner(hkInfo, 6)
     self.Utils:createStroke(hkInfo, self.Config.accentCyan, 1, 0.5)
     
-    -- Guardar referencias
     self.GUI.treadmillInfo = treadmillInfo
     self.GUI.btnRedetect = btnRedetect
 end
 
--- ✅ PESTAÑA LOG
+-- ✅ PESTAÑA LOG (NUEVA)
 function GUI:createTabLog()
     local tabLog = self.GUI.tabLog
     
@@ -548,7 +547,7 @@ function GUI:createTabLog()
     btnClearLog.Size = UDim2.new(0, 60, 0, 20)
     btnClearLog.Position = UDim2.new(1, -65, 0, 5)
     btnClearLog.BackgroundColor3 = self.Config.bgGlass
-    btnClearLog.Text = "🗑️ Limpiar"
+    btnClearLog.Text = "️ Limpiar"
     btnClearLog.TextColor3 = self.Config.textSecondary
     btnClearLog.TextSize = 8
     btnClearLog.Font = Enum.Font.GothamBold
