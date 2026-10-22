@@ -1,14 +1,14 @@
 -- ============================================
--- STEAL ELITE v15.3 - LOADER CORREGIDO
+-- STEAL ELITE v16 - LOADER
 -- ============================================
-
 local BASE_URL = "https://raw.githubusercontent.com/lynxblackx/StealElite/refs/heads/main/modules/"
 
 local Services = {
     Players = game:GetService("Players"),
     Workspace = game:GetService("Workspace"),
     UserInputService = game:GetService("UserInputService"),
-    CoreGui = game:GetService("CoreGui")
+    CoreGui = game:GetService("CoreGui"),
+    HttpService = game:GetService("HttpService")
 }
 
 local player = Services.Players.LocalPlayer
@@ -17,36 +17,38 @@ local function loadModule(name)
     local success, result = pcall(function()
         return loadstring(game:HttpGet(BASE_URL .. name .. ".lua"))()
     end)
-    
     if success and result then
         print("✅ " .. name .. " cargado")
         return result
     else
-        warn("❌ Error cargando " .. name .. ": " .. tostring(result))
+        warn("❌ Error en " .. name .. ": " .. tostring(result))
         return nil
     end
 end
 
+-- Limpiar GUIs anteriores
 for _, gui in pairs(Services.CoreGui:GetChildren()) do
-    if gui.Name == "StealEliteV15" then gui:Destroy() end
+    if gui.Name == "StealEliteV16" then gui:Destroy() end
 end
 
-print("🥷 Steal Elite v15.3 - Iniciando...")
+print("🥷 Steal Elite v16 - Iniciando...")
 
+-- Cargar módulos en orden estricto
 local ConfigData = loadModule("config")
-if not ConfigData then error("❌ config.lua requerido") end
+if not ConfigData then return end
 
 local Utils = loadModule("utils")
-if not Utils then error("❌ utils.lua requerido") end
+if not Utils then return end
 
 local GUI = loadModule("gui")
-if not GUI then error("❌ gui.lua requerido") end
+if not GUI then return end
 
 local Core = loadModule("core")
-if not Core then error("❌ core.lua requerido") end
+if not Core then return end
 
-local Settings = loadModule("settings")  -- ✅ Cargar settings
+local Settings = loadModule("settings") -- opcional
 
+-- Tabla compartida (el "cerebro" que conecta todo)
 local Shared = {
     Services = Services,
     Player = player,
@@ -83,35 +85,24 @@ local Shared = {
     Buttons = {steal = {}, esp = {}}
 }
 
+-- Inicializar filtros
 for _, r in ipairs(Shared.Rarities) do
     Shared.State.stealFilters[r.name] = true
     Shared.State.espFilters[r.name] = true
 end
 
-if Settings then
-    Shared.Settings = Settings
-end
+if Settings then Shared.Settings = Settings end
 
-print("🔧 Inicializando módulos...")
-
+-- Inicializar en orden
 Utils:init(Shared)
-print("✅ Utils")
-
 GUI:Build(Shared)
-print("✅ GUI")
-
 Core:Init(Shared)
-Shared.Core = Core  -- ✅ Importante para los presets
-print("✅ Core")
+Shared.Core = Core -- importante para que GUI pueda llamar a Core
 
 if Settings then
     Settings:Init(Shared)
-    print("✅ Settings")
-else
-    print("⚠️ Settings no disponible")
 end
 
 Core:StartLoops(Shared)
-print("✅ Loops")
 
-print("🚀 Steal Elite v15.3 listo")
+print(" Steal Elite v16 listo")

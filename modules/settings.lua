@@ -1,5 +1,5 @@
 -- ============================================
--- GUARDADO PERSISTENTE - VERSIÓN MEJORADA
+-- GUARDADO PERSISTENTE
 -- ============================================
 local Settings = {}
 
@@ -23,8 +23,7 @@ function Settings:save()
     
     pcall(function()
         if writefile and isfile then
-            writefile(FILE_NAME, game:GetService("HttpService"):JSONEncode(data))
-            self.Shared.Utils:log("💾 Configuración guardada")
+            writefile(FILE_NAME, self.Shared.Services.HttpService:JSONEncode(data))
         end
     end)
 end
@@ -32,9 +31,8 @@ end
 function Settings:load()
     pcall(function()
         if readfile and isfile and isfile(FILE_NAME) then
-            local data = game:GetService("HttpService"):JSONDecode(readfile(FILE_NAME))
+            local data = self.Shared.Services.HttpService:JSONDecode(readfile(FILE_NAME))
             
-            -- Cargar toggles
             if data.speedEnabled ~= nil then 
                 self.Shared.State.speedEnabled = data.speedEnabled 
             end
@@ -47,27 +45,21 @@ function Settings:load()
             if data.espEnabled ~= nil then 
                 self.Shared.State.espEnabled = data.espEnabled 
             end
-            
-            -- Cargar filtros de robo (INDEPENDIENTES)
             if data.stealFilters then
                 for rarity, enabled in pairs(data.stealFilters) do
                     self.Shared.State.stealFilters[rarity] = enabled
                 end
             end
-            
-            -- Cargar filtros de ESP (INDEPENDIENTES)
             if data.espFilters then
                 for rarity, enabled in pairs(data.espFilters) do
                     self.Shared.State.espFilters[rarity] = enabled
                 end
             end
-            
-            -- Cargar delay
             if data.currentDelay then
                 self.Shared.GUI.delayInput.Text = tostring(data.currentDelay)
             end
             
-            self.Shared.Utils:log("⚙️ Configuración cargada")
+            self.Shared.Utils:log("️ Configuración cargada")
         end
     end)
 end

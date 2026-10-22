@@ -1,5 +1,5 @@
 -- ============================================
--- FUNCIONES AUXILIARES DE UI - VERSIÓN MEJORADA
+-- UTILIDADES
 -- ============================================
 local Utils = {}
 
@@ -35,10 +35,6 @@ function Utils:createGradient(parent, color1, color2, rotation)
     return g
 end
 
-function Utils:createGlassEffect(parent)
-    return self:createStroke(parent, self.Config.accentCyan, 1, 0.7)
-end
-
 function Utils:createPillButton(parent, size, position, text, color, textSize)
     local btn = Instance.new("TextButton")
     btn.Size = size
@@ -58,25 +54,33 @@ end
 
 function Utils:createSwitch(parent, position, text, initialState)
     local container = Instance.new("Frame")
-    container.Size = UDim2.new(0, 105, 0, 26)
+    container.Size = UDim2.new(0, 110, 0, 28)
     container.Position = position
     container.BackgroundColor3 = self.Config.bgGlass
     container.BorderSizePixel = 0
     container.Parent = parent
-    self:createCorner(container, 13)
+    self:createCorner(container, 14)
     self:createStroke(container, self.Config.borderGlow, 1, 0.7)
     
-    local indicator = Instance.new("Frame")
-    indicator.Size = UDim2.new(0, 40, 0, 20)
-    indicator.Position = initialState and UDim2.new(1, -44, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
-    indicator.BackgroundColor3 = initialState and self.Config.success or self.Config.textMuted
-    indicator.BorderSizePixel = 0
-    indicator.Parent = container
-    self:createCorner(indicator, 10)
+    local track = Instance.new("Frame")
+    track.Size = UDim2.new(0, 44, 0, 20)
+    track.Position = initialState and UDim2.new(1, -48, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
+    track.BackgroundColor3 = initialState and self.Config.success or self.Config.textMuted
+    track.BorderSizePixel = 0
+    track.Parent = container
+    self:createCorner(track, 10)
+    
+    local thumb = Instance.new("Frame")
+    thumb.Size = UDim2.new(0, 16, 0, 16)
+    thumb.Position = initialState and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 6, 0.5, -8)
+    thumb.BackgroundColor3 = Color3.new(1, 1, 1)
+    thumb.BorderSizePixel = 0
+    thumb.Parent = track
+    self:createCorner(thumb, 8)
     
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -28, 1, 0)
-    label.Position = UDim2.new(0, 6, 0, 0)
+    label.Size = UDim2.new(1, -52, 1, 0)
+    label.Position = UDim2.new(0, 8, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = text
     label.TextColor3 = self.Config.textPrimary
@@ -87,25 +91,23 @@ function Utils:createSwitch(parent, position, text, initialState)
     
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 1, 0)
-    btn.Position = UDim2.new(0, 0, 0, 0)
     btn.BackgroundTransparency = 1
     btn.Text = ""
     btn.Parent = container
     
-    local switchObj = {
-        container = container,
-        indicator = indicator,
-        label = label,
-        button = btn,
-        state = initialState,
-        setState = function(self, newState)
-            self.state = newState
-            self.indicator.Position = newState and UDim2.new(1, -44, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
-            self.indicator.BackgroundColor3 = newState and self.Config.success or self.Config.textMuted
-        end
-    }
+    local obj = {track = track, thumb = thumb, state = initialState}
+    obj.setState = function(self, newState)
+        self.state = newState
+        self.track.Position = newState and UDim2.new(1, -48, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
+        self.track.BackgroundColor3 = newState and self.Config.success or self.Config.textMuted
+        self.thumb.Position = newState and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 6, 0.5, -8)
+    end
     
-    return switchObj
+    btn.MouseButton1Click:Connect(function()
+        obj:setState(not obj.state)
+    end)
+    
+    return obj
 end
 
 function Utils:createSection(parent, size, position, title, titleColor)
@@ -116,7 +118,7 @@ function Utils:createSection(parent, size, position, title, titleColor)
     section.BorderSizePixel = 0
     section.Parent = parent
     self:createCorner(section, 10)
-    self:createGlassEffect(section)
+    self:createStroke(section, self.Config.accentCyan, 1, 0.7)
     
     if title then
         local titleLabel = Instance.new("TextLabel")
@@ -140,7 +142,6 @@ function Utils:createSection(parent, size, position, title, titleColor)
         
         return section, 30
     end
-    
     return section, 6
 end
 
@@ -198,8 +199,7 @@ function Utils:detectRarity(egg)
 end
 
 function Utils:getEggWeight(egg)
-    local weight = egg:GetAttribute("WeightKG")
-    return tonumber(weight) or 0
+    return tonumber(egg:GetAttribute("WeightKG")) or 0
 end
 
 function Utils:getRarityPriority(rarity)
@@ -224,19 +224,9 @@ function Utils:passesEspFilter(rarity)
     return self.Shared.State.espFilters[rarity] or false
 end
 
--- ✅ NUEVAS FUNCIONES DE UTILIDAD
+-- ✅ NUEVO: Calcular distancia
 function Utils:getDistance(pos1, pos2)
     return (pos1 - pos2).Magnitude
-end
-
-function Utils:isNear(egg, maxDistance)
-    local character = self.Shared.Player.Character
-    if not character then return false end
-    
-    local rootPart = character:FindFirstChild("HumanoidRootPart")
-    if not rootPart then return false end
-    
-    return self:getDistance(rootPart.Position, egg.Position) <= maxDistance
 end
 
 return Utils

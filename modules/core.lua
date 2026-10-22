@@ -1,5 +1,5 @@
 -- ============================================
--- LÓGICA PRINCIPAL - VERSIÓN CORREGIDA
+-- CORE - LÓGICA PRINCIPAL
 -- ============================================
 local Core = {}
 
@@ -60,7 +60,7 @@ function Core:connectEvents()
         GUI.content.Visible = not State.isMinimized
         GUI.statusBar.Visible = not State.isMinimized
         if State.isMinimized then
-            GUI.mainFrame.Size = UDim2.new(0, self.Config.width, 0, 42)
+            GUI.mainFrame.Size = UDim2.new(0, self.Config.width, 0, 38)
             GUI.btnMin.Text = "+"
         else
             GUI.mainFrame.Size = UDim2.new(0, self.Config.width, 0, self.Config.height)
@@ -81,13 +81,13 @@ function Core:connectEvents()
         GUI.screenGui:Destroy()
     end)
     
-    -- Switches
+    -- Switches con guardado
     self.Switches.esp.button.MouseButton1Click:Connect(function()
         State.espEnabled = not State.espEnabled
         self.Switches.esp:setState(State.espEnabled)
         if not State.espEnabled then self:clearAllEsp() end
         self:updateEspVisibility()
-        self.Utils:log(State.espEnabled and "️ ESP ON" or "👁️ ESP OFF")
+        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "️ ESP OFF")
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
@@ -109,7 +109,7 @@ function Core:connectEvents()
         State.afkEnabled = not State.afkEnabled
         self.Switches.afk:setState(State.afkEnabled)
         if State.afkEnabled then State.lastAfk = tick() end
-        self.Utils:log(State.afkEnabled and "️ AFK ON" or "🛡️ AFK OFF")
+        self.Utils:log(State.afkEnabled and "🛡️ AFK ON" or "🛡️ AFK OFF")
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
@@ -165,7 +165,7 @@ end
 function Core:StartLoops(Shared)
     -- Speed loop
     task.spawn(function()
-        while self.GUI.screenGui.Parent do
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.speedEnabled then
                 local character = self.Shared.Player.Character
                 if character then
@@ -179,7 +179,7 @@ function Core:StartLoops(Shared)
     
     -- AFK loop
     task.spawn(function()
-        while self.GUI.screenGui.Parent do
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.afkEnabled then
                 local timeIdle = tick() - self.State.lastInput
                 local timeSinceAction = tick() - self.State.lastAfk
@@ -200,15 +200,15 @@ function Core:StartLoops(Shared)
     
     -- ESP lines loop
     task.spawn(function()
-        while self.GUI.screenGui.Parent do
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.espEnabled then self:updateEspLines() end
-            task.wait(0.1)
+            task.wait(0.15)
         end
     end)
     
     -- Live scan loop
     task.spawn(function()
-        while self.GUI.screenGui.Parent do
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
             self:liveScan()
             task.wait(0.5)
         end
@@ -241,7 +241,7 @@ function Core:StartLoops(Shared)
 end
 
 function Core:updateStats()
-    self.GUI.statsLabel.Text = string.format(" %d | 👁️ %d |  %ds", 
+    self.GUI.statsLabel.Text = string.format("🥚 %d | 👁️ %d | 🏃 %ds", 
         self.State.stolenCount, self.State.espCount, math.floor(self.State.treadmillTime))
 end
 
@@ -260,17 +260,10 @@ function Core:tpToSpawn()
 end
 
 function Core:stealEgg(egg)
-    -- Verificar cooldown
-    if self.cooldowns[egg] then
-        self.Utils:log("⏳ Cooldown activo para " .. egg.Name)
-        return false
-    end
-    
-    -- Aplicar cooldown de 2 segundos
+    -- Cooldown anti-spam
+    if self.cooldowns[egg] then return false end
     self.cooldowns[egg] = true
-    task.delay(2, function()
-        self.cooldowns[egg] = nil
-    end)
+    task.delay(2, function() self.cooldowns[egg] = nil end)
     
     local stealPrompt = egg:FindFirstChild("Steal")
     if not stealPrompt or not stealPrompt:IsA("ProximityPrompt") then
@@ -346,7 +339,7 @@ function Core:tpToTreadmill()
     
     self.State.onTreadmill = true
     self.Utils:log("🏃 TP al Treadmill")
-    self.GUI.statusLabel.Text = "🏃 En Treadmill..."
+    self.GUI.statusLabel.Text = " En Treadmill..."
     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
     return true
 end
@@ -355,11 +348,11 @@ function Core:leaveTreadmill()
     if self.State.onTreadmill then
         self.State.onTreadmill = false
         self.State.treadmillTime = 0
-        self.Utils:log(" Saliendo del Treadmill")
+        self.Utils:log("🚪 Saliendo del Treadmill")
     end
 end
 
--- ESP
+-- ESP con distancia
 function Core:removeEsp(egg)
     if self.State.espObjects[egg] then
         local esp = self.State.espObjects[egg]
@@ -388,7 +381,7 @@ function Core:createEsp(egg, rarity)
     
     local billboard = Instance.new("BillboardGui")
     billboard.Name = "EspBillboard"
-    billboard.Size = UDim2.new(0, 180, 0, 50)
+    billboard.Size = UDim2.new(0, 180, 0, 60)
     billboard.StudsOffset = Vector3.new(0, 4, 0)
     billboard.AlwaysOnTop = true
     billboard.LightInfluence = 0
@@ -397,44 +390,58 @@ function Core:createEsp(egg, rarity)
     local bg = Instance.new("Frame")
     bg.Size = UDim2.new(1, 0, 1, 0)
     bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    bg.BackgroundTransparency = 0.3
+    bg.BackgroundTransparency = 0.4
     bg.BorderSizePixel = 0
     bg.Parent = billboard
     self.Utils:createCorner(bg, 6)
     self.Utils:createStroke(bg, color, 2, 0)
     
     local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1, -8, 0, 16)
+    nameLabel.Size = UDim2.new(1, -8, 0, 14)
     nameLabel.Position = UDim2.new(0, 4, 0, 2)
     nameLabel.BackgroundTransparency = 1
     nameLabel.Text = "🥚 " .. egg.Name
     nameLabel.TextColor3 = Color3.new(1, 1, 1)
-    nameLabel.TextSize = 11
+    nameLabel.TextSize = 10
     nameLabel.Font = Enum.Font.GothamBold
     nameLabel.TextXAlignment = Enum.TextXAlignment.Left
     nameLabel.Parent = bg
     
     local rarityLabel = Instance.new("TextLabel")
-    rarityLabel.Size = UDim2.new(1, -8, 0, 14)
-    rarityLabel.Position = UDim2.new(0, 4, 0, 18)
+    rarityLabel.Size = UDim2.new(1, -8, 0, 12)
+    rarityLabel.Position = UDim2.new(0, 4, 0, 16)
     rarityLabel.BackgroundTransparency = 1
     rarityLabel.Text = "⭐ " .. rarity
     rarityLabel.TextColor3 = color
-    rarityLabel.TextSize = 10
+    rarityLabel.TextSize = 9
     rarityLabel.Font = Enum.Font.GothamBold
     rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
     rarityLabel.Parent = bg
     
     local kgLabel = Instance.new("TextLabel")
-    kgLabel.Size = UDim2.new(1, -8, 0, 14)
-    kgLabel.Position = UDim2.new(0, 4, 0, 32)
+    kgLabel.Size = UDim2.new(1, -8, 0, 12)
+    kgLabel.Position = UDim2.new(0, 4, 0, 28)
     kgLabel.BackgroundTransparency = 1
     kgLabel.Text = string.format("⚖️ %.2f kg", weight)
     kgLabel.TextColor3 = self.Config.accentGold
-    kgLabel.TextSize = 9
+    kgLabel.TextSize = 8
     kgLabel.Font = Enum.Font.Gotham
     kgLabel.TextXAlignment = Enum.TextXAlignment.Left
     kgLabel.Parent = bg
+    
+    -- ✅ NUEVO: Label de distancia
+    local distLabel = Instance.new("TextLabel")
+    distLabel.Name = "DistLabel"
+    distLabel.Size = UDim2.new(1, -8, 0, 12)
+    distLabel.Position = UDim2.new(0, 4, 0, 40)
+    distLabel.BackgroundTransparency = 1
+    distLabel.Text = "📍 0 studs"
+    distLabel.TextColor3 = self.Config.textSecondary
+    distLabel.TextSize = 8
+    distLabel.Font = Enum.Font.Gotham
+    distLabel.TextXAlignment = Enum.TextXAlignment.Left
+    distLabel.Parent = bg
+    esp.distLabel = distLabel
     
     esp.billboard = billboard
     
@@ -445,8 +452,8 @@ function Core:createEsp(egg, rarity)
     linePart.CanQuery = false
     linePart.Material = Enum.Material.Neon
     linePart.Color = color
-    linePart.Transparency = 0.3
-    linePart.Size = Vector3.new(0.1, 0.1, 1)
+    linePart.Transparency = 0.4
+    linePart.Size = Vector3.new(0.08, 0.08, 1)
     linePart.Parent = self.Shared.Services.Workspace
     esp.line = linePart
     
@@ -465,9 +472,15 @@ function Core:updateEspLines()
             local eggPos = egg.Position
             local playerPos = rootPart.Position
             local distance = (eggPos - playerPos).Magnitude
+            
             local midpoint = (playerPos + eggPos) / 2
             esp.line.CFrame = CFrame.new(midpoint, eggPos)
             esp.line.Size = Vector3.new(0.08, 0.08, distance)
+            
+            -- ✅ Actualizar distancia en el billboard
+            if esp.distLabel then
+                esp.distLabel.Text = string.format("📍 %.1f studs", distance)
+            end
         end
     end
 end
@@ -480,7 +493,7 @@ function Core:updateEspVisibility()
         
         if esp.highlight then esp.highlight.Enabled = shouldShow end
         if esp.billboard then esp.billboard.Enabled = shouldShow end
-        if esp.line then esp.line.Transparency = shouldShow and 0.3 or 1 end
+        if esp.line then esp.line.Transparency = shouldShow and 0.4 or 1 end
     end
 end
 
@@ -503,70 +516,70 @@ function Core:addRobLog(eggName, rarity, weight, success)
     
     if #self.State.robLog > 20 then table.remove(self.State.robLog, 21) end
     
-    -- Limpiar log anterior
+    if not self.GUI.logScroll then return end
+    
     for _, child in pairs(self.GUI.logScroll:GetChildren()) do
         if child:IsA("Frame") then child:Destroy() end
     end
     
-    -- Crear entradas
     for i, rob in ipairs(self.State.robLog) do
         if i > 10 then break end
         
         local entry = Instance.new("Frame")
-        entry.Size = UDim2.new(1, 0, 0, 16)
+        entry.Size = UDim2.new(1, 0, 0, 14)
         entry.BackgroundColor3 = rob.success and Color3.fromRGB(20, 35, 30) or Color3.fromRGB(35, 20, 25)
         entry.BorderSizePixel = 0
         entry.LayoutOrder = i
         entry.Parent = self.GUI.logScroll
-        self.Utils:createCorner(entry, 4)
+        self.Utils:createCorner(entry, 3)
         
         local iconLabel = Instance.new("TextLabel")
-        iconLabel.Size = UDim2.new(0, 16, 1, 0)
+        iconLabel.Size = UDim2.new(0, 14, 1, 0)
         iconLabel.Position = UDim2.new(0, 3, 0, 0)
         iconLabel.BackgroundTransparency = 1
-        iconLabel.Text = rob.success and "✅" or ""
-        iconLabel.TextSize = 9
+        iconLabel.Text = rob.success and "✅" or "❌"
+        iconLabel.TextSize = 8
         iconLabel.Font = Enum.Font.GothamBold
         iconLabel.TextColor3 = Color3.new(1, 1, 1)
         iconLabel.TextXAlignment = Enum.TextXAlignment.Left
         iconLabel.Parent = entry
         
         local nameLabel = Instance.new("TextLabel")
-        nameLabel.Size = UDim2.new(0, 80, 1, 0)
-        nameLabel.Position = UDim2.new(0, 20, 0, 0)
+        nameLabel.Size = UDim2.new(0, 75, 1, 0)
+        nameLabel.Position = UDim2.new(0, 18, 0, 0)
         nameLabel.BackgroundTransparency = 1
         nameLabel.Text = rob.name
-        nameLabel.TextSize = 9
+        nameLabel.TextSize = 8
         nameLabel.Font = Enum.Font.GothamBold
         nameLabel.TextColor3 = Color3.new(1, 1, 1)
         nameLabel.TextXAlignment = Enum.TextXAlignment.Left
         nameLabel.Parent = entry
         
         local rarityLabel = Instance.new("TextLabel")
-        rarityLabel.Size = UDim2.new(0, 55, 1, 0)
-        rarityLabel.Position = UDim2.new(0, 102, 0, 0)
+        rarityLabel.Size = UDim2.new(0, 50, 1, 0)
+        rarityLabel.Position = UDim2.new(0, 95, 0, 0)
         rarityLabel.BackgroundTransparency = 1
         rarityLabel.Text = rob.rarity
-        rarityLabel.TextSize = 8
+        rarityLabel.TextSize = 7
         rarityLabel.Font = Enum.Font.GothamBold
         rarityLabel.TextColor3 = rob.color
         rarityLabel.TextXAlignment = Enum.TextXAlignment.Left
         rarityLabel.Parent = entry
         
         local kgLabel = Instance.new("TextLabel")
-        kgLabel.Size = UDim2.new(0, 45, 1, 0)
-        kgLabel.Position = UDim2.new(0, 158, 0, 0)
+        kgLabel.Size = UDim2.new(0, 40, 1, 0)
+        kgLabel.Position = UDim2.new(0, 147, 0, 0)
         kgLabel.BackgroundTransparency = 1
         kgLabel.Text = string.format("%.1fkg", rob.weight)
-        kgLabel.TextSize = 8
+        kgLabel.TextSize = 7
         kgLabel.Font = Enum.Font.Gotham
         kgLabel.TextColor3 = self.Config.accentGold
         kgLabel.TextXAlignment = Enum.TextXAlignment.Left
         kgLabel.Parent = entry
         
         local timeLabel = Instance.new("TextLabel")
-        timeLabel.Size = UDim2.new(0, 45, 1, 0)
-        timeLabel.Position = UDim2.new(1, -48, 0, 0)
+        timeLabel.Size = UDim2.new(0, 40, 1, 0)
+        timeLabel.Position = UDim2.new(1, -42, 0, 0)
         timeLabel.BackgroundTransparency = 1
         timeLabel.Text = rob.time
         timeLabel.TextSize = 7
@@ -575,8 +588,6 @@ function Core:addRobLog(eggName, rarity, weight, success)
         timeLabel.TextXAlignment = Enum.TextXAlignment.Right
         timeLabel.Parent = entry
     end
-    
-    self.Utils:log(" Log actualizado: " .. eggName .. " [" .. rarity .. "]")
 end
 
 -- CREAR ENTRADA EN LISTA
@@ -587,7 +598,7 @@ function Core:createEggEntry(egg, rarity)
     local weight = self.Utils:getEggWeight(egg)
     
     local entry = Instance.new("Frame")
-    entry.Size = UDim2.new(1, 0, 0, 30)
+    entry.Size = UDim2.new(1, 0, 0, 28)
     entry.BackgroundColor3 = self.Config.bgGlass
     entry.BorderSizePixel = 0
     entry.LayoutOrder = 100 - self.Utils:getRarityPriority(rarity)
@@ -643,7 +654,7 @@ function Core:createEggEntry(egg, rarity)
     self.State.eggEntries[egg] = entry
 end
 
--- ✅ LIVE SCAN CORREGIDO
+-- LIVE SCAN
 function Core:liveScan()
     local spawnedEggs = self.Shared.Services.Workspace:FindFirstChild("SpawnedEggs")
     if not spawnedEggs then return end
@@ -660,7 +671,6 @@ function Core:liveScan()
                 self:createEggEntry(egg, rarity)
             end
             
-            -- ✅ ESP usa espFilters (INDEPENDIENTE)
             if self.State.espEnabled and not self.State.espObjects[egg] then
                 self:createEsp(egg, rarity)
             end
@@ -704,11 +714,8 @@ function Core:getFilteredEggs()
         local egg = eggData.egg
         local rarity = eggData.rarity
         
-        -- Filtro por nombre
         local nameMatch = filterText == "" or egg.Name:lower():find(filterText)
-        
-        -- ✅ Filtro por rareza de ROBO (INDEPENDIENTE de ESP)
-        local rarityMatch = self.State.stealFilters[rarity] or false
+        local rarityMatch = self.State.stealFilters[rarity] or false  -- ✅ Solo filtros de robo
         
         if nameMatch and rarityMatch then
             table.insert(filtered, eggData)
@@ -726,7 +733,7 @@ function Core:updateFilterUI()
             item.button.TextColor3 = Color3.new(0, 0, 0)
         else
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "✗ " .. item.rarity.short
+            item.button.Text = "" .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
     end
@@ -788,25 +795,23 @@ function Core:performAfkAction()
     return success
 end
 
--- ✅ LOOP PRINCIPAL CORREGIDO
+-- LOOP PRINCIPAL
 function Core:mainLoop()
     self.State.loopRunning = true
     self.Utils:log("🔄 LOOP INICIADO")
     self.GUI.statusLabel.Text = "🔄 Loop activo"
     self.GUI.statusLabel.TextColor3 = self.Config.accentGold
     
-    while self.State.loopRunning and self.GUI.screenGui.Parent do
+    while self.State.loopRunning and self.GUI.screenGui and self.GUI.screenGui.Parent do
         local delay = tonumber(self.GUI.delayInput.Text) or 0.5
         
         self:liveScan()
         local filteredEggs = self:getFilteredEggs()
         
-        self.Utils:log(" Huevos totales: " .. #self.State.eggs .. " | Filtrados: " .. #filteredEggs)
+        self.Utils:log("📊 Huevos totales: " .. #self.State.eggs .. " | Filtrados: " .. #filteredEggs)
         
         if #filteredEggs > 0 then
-            if self.State.onTreadmill then
-                self:leaveTreadmill()
-            end
+            if self.State.onTreadmill then self:leaveTreadmill() end
             
             self.GUI.statusLabel.Text = string.format("🎯 %d huevos para robar", #filteredEggs)
             self.GUI.statusLabel.TextColor3 = self.Config.accentGold
@@ -853,7 +858,7 @@ function Core:mainLoop()
                     self:tpToTreadmill()
                 end
                 
-                while self.State.loopRunning and self.GUI.screenGui.Parent and self.State.treadmillEnabled do
+                while self.State.loopRunning and self.GUI.screenGui and self.GUI.screenGui.Parent and self.State.treadmillEnabled do
                     task.wait(self.Config.treadmillCheckInterval)
                     self.State.treadmillTime = self.State.treadmillTime + self.Config.treadmillCheckInterval
                     self:updateStats()
@@ -871,11 +876,11 @@ function Core:mainLoop()
                         self:tpToTreadmill()
                     end
                     
-                    self.GUI.statusLabel.Text = string.format(" Treadmill %.0fs", self.State.treadmillTime)
+                    self.GUI.statusLabel.Text = string.format("🏃 Treadmill %.0fs", self.State.treadmillTime)
                     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
                 end
             else
-                self.GUI.statusLabel.Text = " Esperando huevos..."
+                self.GUI.statusLabel.Text = "⏳ Esperando huevos..."
                 self.GUI.statusLabel.TextColor3 = self.Config.textSecondary
                 task.wait(2)
             end
