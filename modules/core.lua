@@ -83,6 +83,7 @@ function Core:connectEvents()
         if not State.espEnabled then self:clearAllEsp() end
         self:updateEspVisibility()
         self.Utils:log(State.espEnabled and "👁️ ESP ON" or "👁️ ESP OFF")
+        self.Shared.Settings:save()
     end)
     
     self.Switches.speed.button.MouseButton1Click:Connect(function()
@@ -96,6 +97,7 @@ function Core:connectEvents()
             end
         end
         self.Utils:log(State.speedEnabled and "🏃 Speed ON" or "🏃 Speed OFF")
+        self.Shared.Settings:save()
     end)
     
     self.Switches.afk.button.MouseButton1Click:Connect(function()
@@ -103,6 +105,7 @@ function Core:connectEvents()
         self.Switches.afk:setState(State.afkEnabled)
         if State.afkEnabled then State.lastAfk = tick() end
         self.Utils:log(State.afkEnabled and "️ AFK ON" or "🛡️ AFK OFF")
+        self.Shared.Settings:save()
     end)
     
     self.Switches.treadmill.button.MouseButton1Click:Connect(function()
@@ -112,6 +115,7 @@ function Core:connectEvents()
             self:leaveTreadmill()
         end
         self.Utils:log(State.treadmillEnabled and "🏃 Treadmill ON" or "🏃 Treadmill OFF")
+        self.Shared.Settings:save()
     end)
     
     -- Anti-AFK input detection

@@ -43,6 +43,7 @@ local ConfigData = loadModule("config")
 local Utils = loadModule("utils")
 local GUI = loadModule("gui")
 local Core = loadModule("core")
+local Settings = loadModule("settings")
 
 if not ConfigData or not Utils or not GUI or not Core then
     warn("❌ No se pudieron cargar todos los módulos")
@@ -98,6 +99,7 @@ end
 Utils:init(Shared)
 GUI:Build(Shared)
 Core:Init(Shared)
+Settings:Init(Shared)
 Core:StartLoops(Shared)
 
 print("🚀 Steal Elite v15 Modular cargado exitosamente")
