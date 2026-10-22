@@ -1,5 +1,5 @@
 -- ============================================
--- CORE - LÓGICA PRINCIPAL
+-- CORE - LÓGICA PRINCIPAL + DETECTOR TREADMILL
 -- ============================================
 local Core = {}
 
@@ -14,6 +14,111 @@ function Core:Init(Shared)
     
     self.cooldowns = {}
     self:connectEvents()
+    self:checkDetector() -- Verificar si el detector ya corrió
+end
+
+function Core:checkDetector()
+    -- Verifica si _G tiene datos del detector
+    if _G.MyTreadmill and _G.MyTreadmillPos then
+        local plotName = tostring(_G.MyPlot or "Desconocido")
+        self.Utils:log("✅ Treadmill detectado: Plot " .. plotName)
+        if self.GUI.treadmillInfo then
+            self.GUI.treadmillInfo.Text = "🏃 Plot " .. plotName .. " ✅"
+            self.GUI.treadmillInfo.TextColor3 = self.Config.success
+        end
+        return true
+    else
+        self.Utils:log("⚠️ No hay treadmill detectado. Usa el botón Re-detectar")
+        if self.GUI.treadmillInfo then
+            self.GUI.treadmillInfo.Text = "🏃 Treadmill: No detectado ⚠️"
+            self.GUI.treadmillInfo.TextColor3 = self.Config.danger
+        end
+        return false
+    end
+end
+
+function Core:redetectTreadmill()
+    self.Utils:log("🔍 Re-detectando treadmill...")
+    if self.GUI.treadmillInfo then
+        self.GUI.treadmillInfo.Text = " Buscando..."
+        self.GUI.treadmillInfo.TextColor3 = self.Config.accentGold
+    end
+    
+    local Workspace = self.Shared.Services.Workspace
+    local essentials = Workspace:FindFirstChild("Essentials")
+    if not essentials then
+        self.Utils:log("❌ No se encontró Essentials")
+        return false
+    end
+    
+    local tycoons = essentials:FindFirstChild("Tycoons")
+    if not tycoons then
+        self.Utils:log("❌ No se encontró Tycoons")
+        return false
+    end
+    
+    -- Método 1: Buscar por Owner attribute
+    for _, tycoon in ipairs(tycoons:GetChildren()) do
+        if tycoon:IsA("Model") or tycoon:IsA("Folder") then
+            local owner = tycoon:GetAttribute("Owner")
+            if owner == self.Shared.Player.Name or owner == tostring(self.Shared.Player.UserId) then
+                local region = tycoon:FindFirstChild("TreadmillRegion")
+                if region then
+                    local inv = region:FindFirstChild("inv")
+                    if inv then
+                        _G.MyTreadmill = region
+                        _G.MyTreadmillPos = inv:IsA("BasePart") and inv.Position or inv:GetPivot().Position
+                        _G.MyPlot = tycoon
+                        
+                        self.Utils:log("✅ Re-detectado: " .. tycoon.Name)
+                        self:checkDetector()
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    
+    -- Método 2: Más cercano al jugador
+    local char = self.Shared.Player.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local myPos = char.HumanoidRootPart.Position
+        local closest, closestDist = nil, math.huge
+        
+        for _, tycoon in ipairs(tycoons:GetChildren()) do
+            if tycoon:IsA("Model") or tycoon:IsA("Folder") then
+                local region = tycoon:FindFirstChild("TreadmillRegion")
+                if region then
+                    local inv = region:FindFirstChild("inv")
+                    if inv then
+                        local pos = inv:IsA("BasePart") and inv.Position or inv:GetPivot().Position
+                        local dist = (myPos - pos).Magnitude
+                        if dist < closestDist then
+                            closestDist = dist
+                            closest = {tycoon = tycoon, region = region, inv = inv, pos = pos}
+                        end
+                    end
+                end
+            end
+        end
+        
+        if closest and closestDist < 200 then
+            _G.MyTreadmill = closest.region
+            _G.MyTreadmillPos = closest.pos
+            _G.MyPlot = closest.tycoon
+            
+            self.Utils:log("✅ Detectado por distancia: " .. closest.tycoon.Name .. " (" .. string.format("%.0f", closestDist) .. " studs)")
+            self:checkDetector()
+            return true
+        end
+    end
+    
+    self.Utils:log("❌ No se pudo re-detectar")
+    if self.GUI.treadmillInfo then
+        self.GUI.treadmillInfo.Text = " Treadmill: ❌ No encontrado"
+        self.GUI.treadmillInfo.TextColor3 = self.Config.danger
+    end
+    return false
 end
 
 function Core:connectEvents()
@@ -42,6 +147,13 @@ function Core:connectEvents()
                 if child:IsA("Frame") then child:Destroy() end
             end
             self.Utils:log("📋 Registro limpiado")
+        end)
+    end
+    
+    -- ✅ Botón Re-detectar (si existe en GUI)
+    if GUI.btnRedetect then
+        GUI.btnRedetect.MouseButton1Click:Connect(function()
+            self:redetectTreadmill()
         end)
     end
     
@@ -81,13 +193,13 @@ function Core:connectEvents()
         GUI.screenGui:Destroy()
     end)
     
-    -- Switches con guardado
+    -- Switches
     self.Switches.esp.button.MouseButton1Click:Connect(function()
         State.espEnabled = not State.espEnabled
         self.Switches.esp:setState(State.espEnabled)
         if not State.espEnabled then self:clearAllEsp() end
         self:updateEspVisibility()
-        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "️ ESP OFF")
+        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "👁️ ESP OFF")
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
@@ -215,7 +327,8 @@ function Core:StartLoops(Shared)
     end)
     
     -- SpawnedEggs events
-    local spawnedEggsFolder = self.Shared.Services.Workspace:FindFirstChild("SpawnedEggs")
+    local Workspace = self.Shared.Services.Workspace
+    local spawnedEggsFolder = Workspace:FindFirstChild("SpawnedEggs")
     if spawnedEggsFolder then
         spawnedEggsFolder.ChildAdded:Connect(function()
             task.wait(0.1)
@@ -246,7 +359,8 @@ function Core:updateStats()
 end
 
 function Core:tpToSpawn()
-    local essentials = self.Shared.Services.Workspace:FindFirstChild("Essentials")
+    local Workspace = self.Shared.Services.Workspace
+    local essentials = Workspace:FindFirstChild("Essentials")
     if not essentials then return false end
     local tycoons = essentials:FindFirstChild("Tycoons")
     if not tycoons then return false end
@@ -282,9 +396,18 @@ function Core:stealEgg(egg)
     return ok
 end
 
--- TREADMILL
+-- ============================================
+-- ✅ TREADMILL CON DETECTOR INTEGRADO
+-- ============================================
 function Core:getTreadmillPart()
-    local essentials = self.Shared.Services.Workspace:FindFirstChild("Essentials")
+    -- ✅ PRIMERO: Usar el treadmill detectado
+    if _G.MyTreadmill and _G.MyTreadmill.Parent then
+        return _G.MyTreadmill
+    end
+    
+    -- Fallback: buscar manualmente (estructura original)
+    local Workspace = self.Shared.Services.Workspace
+    local essentials = Workspace:FindFirstChild("Essentials")
     if not essentials then return nil end
     local tycoons = essentials:FindFirstChild("Tycoons")
     if not tycoons then return nil end
@@ -296,6 +419,12 @@ function Core:getTreadmillPart()
 end
 
 function Core:getTreadmillPosition()
+    -- ✅ PRIMERO: Usar la posición detectada
+    if _G.MyTreadmillPos then
+        return _G.MyTreadmillPos
+    end
+    
+    -- Fallback: calcular posición
     local inv = self:getTreadmillPart()
     if not inv then return nil end
     if inv:IsA("BasePart") then
@@ -320,12 +449,17 @@ end
 function Core:tpToTreadmill()
     local treadmillPos = self:getTreadmillPosition()
     if not treadmillPos then 
-        self.Utils:log("❌ Treadmill no encontrado")
+        self.Utils:log("❌ Treadmill no encontrado - ejecuta el detector primero")
+        if self.GUI.treadmillInfo then
+            self.GUI.treadmillInfo.Text = "🏃 Treadmill: ❌ No detectado"
+            self.GUI.treadmillInfo.TextColor3 = self.Config.danger
+        end
         return false 
     end
     
+    self.Utils:log("🏃 TP a posición: " .. string.format("%.1f, %.1f, %.1f", treadmillPos.X, treadmillPos.Y, treadmillPos.Z))
     self.Utils:teleportTo(treadmillPos, Vector3.new(0, 3, 0))
-    task.wait(0.3)
+    task.wait(0.5)
     
     local inv = self:getTreadmillPart()
     if inv then
@@ -338,8 +472,8 @@ function Core:tpToTreadmill()
     end
     
     self.State.onTreadmill = true
-    self.Utils:log("🏃 TP al Treadmill")
-    self.GUI.statusLabel.Text = " En Treadmill..."
+    self.Utils:log("✅ TP al Treadmill exitoso")
+    self.GUI.statusLabel.Text = "🏃 En Treadmill..."
     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
     return true
 end
@@ -352,7 +486,7 @@ function Core:leaveTreadmill()
     end
 end
 
--- ESP con distancia
+-- ESP
 function Core:removeEsp(egg)
     if self.State.espObjects[egg] then
         local esp = self.State.espObjects[egg]
@@ -400,7 +534,7 @@ function Core:createEsp(egg, rarity)
     nameLabel.Size = UDim2.new(1, -8, 0, 14)
     nameLabel.Position = UDim2.new(0, 4, 0, 2)
     nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = "🥚 " .. egg.Name
+    nameLabel.Text = " " .. egg.Name
     nameLabel.TextColor3 = Color3.new(1, 1, 1)
     nameLabel.TextSize = 10
     nameLabel.Font = Enum.Font.GothamBold
@@ -429,7 +563,7 @@ function Core:createEsp(egg, rarity)
     kgLabel.TextXAlignment = Enum.TextXAlignment.Left
     kgLabel.Parent = bg
     
-    -- ✅ NUEVO: Label de distancia
+    -- ✅ Label de distancia
     local distLabel = Instance.new("TextLabel")
     distLabel.Name = "DistLabel"
     distLabel.Size = UDim2.new(1, -8, 0, 12)
@@ -477,7 +611,7 @@ function Core:updateEspLines()
             esp.line.CFrame = CFrame.new(midpoint, eggPos)
             esp.line.Size = Vector3.new(0.08, 0.08, distance)
             
-            -- ✅ Actualizar distancia en el billboard
+            -- ✅ Actualizar distancia en billboard
             if esp.distLabel then
                 esp.distLabel.Text = string.format("📍 %.1f studs", distance)
             end
@@ -656,7 +790,8 @@ end
 
 -- LIVE SCAN
 function Core:liveScan()
-    local spawnedEggs = self.Shared.Services.Workspace:FindFirstChild("SpawnedEggs")
+    local Workspace = self.Shared.Services.Workspace
+    local spawnedEggs = Workspace:FindFirstChild("SpawnedEggs")
     if not spawnedEggs then return end
     
     local newEggs = {}
@@ -733,7 +868,7 @@ function Core:updateFilterUI()
             item.button.TextColor3 = Color3.new(0, 0, 0)
         else
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "" .. item.rarity.short
+            item.button.Text = "✗" .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
     end
@@ -880,7 +1015,7 @@ function Core:mainLoop()
                     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
                 end
             else
-                self.GUI.statusLabel.Text = "⏳ Esperando huevos..."
+                self.GUI.statusLabel.Text = " Esperando huevos..."
                 self.GUI.statusLabel.TextColor3 = self.Config.textSecondary
                 task.wait(2)
             end

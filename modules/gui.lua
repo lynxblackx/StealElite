@@ -1,5 +1,5 @@
 -- ============================================
--- GUI - VERSIÓN FINAL CORREGIDA
+-- GUI - CON DETECTOR INTEGRADO
 -- ============================================
 local GUI = {}
 
@@ -89,10 +89,10 @@ function GUI:createHeader()
     titleLabel.Parent = header
     
     local versionLabel = Instance.new("TextLabel")
-    versionLabel.Size = UDim2.new(0, 60, 0, 12)
+    versionLabel.Size = UDim2.new(0, 70, 0, 12)
     versionLabel.Position = UDim2.new(0, 36, 1, -16)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v16 FINAL"
+    versionLabel.Text = "v16 DETECTOR"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 7
     versionLabel.Font = Enum.Font.GothamBold
@@ -192,7 +192,7 @@ end
 function GUI:createTabRobo()
     local tabRobo = self.GUI.tabRobo
     
-    -- SECCIÓN 1: CONTROL DE ROBO
+    -- CONTROL DE ROBO
     local s1, s1Offset = self.Utils:createSection(tabRobo, 
         UDim2.new(1, 0, 0, 62), 
         UDim2.new(0, 0, 0, 0),
@@ -306,7 +306,7 @@ function GUI:createTabRobo()
     self.Utils:createCorner(btnPresetAll, 6)
     btnPresetAll.MouseButton1Click:Connect(function() applyPreset("ALL") end)
     
-    -- SECCIÓN 2: FILTROS DE ROBO
+    -- FILTROS DE ROBO
     local s2, s2Offset = self.Utils:createSection(tabRobo,
         UDim2.new(1, 0, 0, 85),
         UDim2.new(0, 0, 0, 96),
@@ -389,7 +389,7 @@ function GUI:createTabRobo()
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
-    -- SECCIÓN 3: FILTROS DE ESP
+    -- FILTROS DE ESP
     local s3, s3Offset = self.Utils:createSection(tabRobo,
         UDim2.new(1, 0, 0, 85),
         UDim2.new(0, 0, 0, 186),
@@ -471,7 +471,6 @@ function GUI:createTabRobo()
         if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
     
-    -- Guardar referencias
     self.GUI.btnLoop = btnLoop
     self.GUI.btnStop = btnStop
     self.GUI.delayInput = delayInput
@@ -480,9 +479,11 @@ function GUI:createTabRobo()
     self.Buttons.esp = espButtons
 end
 
+-- ✅ PESTAÑA MOD CON DETECTOR
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
+    -- Toggles
     local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 8), "👁️ ESP Visual", true)
     local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 40), "🏃 Speed Boost", true)
     local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 72), "🛡️ Anti-AFK", true)
@@ -493,23 +494,53 @@ function GUI:createTabMod()
     self.Switches.afk = switchAfk
     self.Switches.treadmill = switchTreadmill
     
+    -- ✅ Indicador de Treadmill detectado
+    local treadmillInfo = Instance.new("TextLabel")
+    treadmillInfo.Size = UDim2.new(1, -10, 0, 14)
+    treadmillInfo.Position = UDim2.new(0, 5, 0, 136)
+    treadmillInfo.BackgroundTransparency = 1
+    treadmillInfo.Text = "🏃 Treadmill: Detectando..."
+    treadmillInfo.TextColor3 = self.Config.textMuted
+    treadmillInfo.TextSize = 8
+    treadmillInfo.Font = Enum.Font.GothamBold
+    treadmillInfo.TextXAlignment = Enum.TextXAlignment.Left
+    treadmillInfo.Parent = tabMod
+    
+    -- ✅ Botón Re-detectar
+    local btnRedetect = Instance.new("TextButton")
+    btnRedetect.Size = UDim2.new(1, -10, 0, 20)
+    btnRedetect.Position = UDim2.new(0, 5, 0, 152)
+    btnRedetect.BackgroundColor3 = self.Config.accentCyan
+    btnRedetect.Text = "🔍 Re-detectar Treadmill"
+    btnRedetect.TextColor3 = Color3.new(0, 0, 0)
+    btnRedetect.TextSize = 8
+    btnRedetect.Font = Enum.Font.GothamBold
+    btnRedetect.BorderSizePixel = 0
+    btnRedetect.Parent = tabMod
+    self.Utils:createCorner(btnRedetect, 5)
+    
+    -- Info de atajos
     local hkInfo = Instance.new("TextLabel")
-    hkInfo.Size = UDim2.new(1, -10, 0, 100)
-    hkInfo.Position = UDim2.new(0, 5, 0, 140)
+    hkInfo.Size = UDim2.new(1, -10, 0, 80)
+    hkInfo.Position = UDim2.new(0, 5, 0, 180)
     hkInfo.BackgroundColor3 = self.Config.bgGlass
     hkInfo.BorderSizePixel = 0
     hkInfo.Text = "⌨️ ATAJOS:\nF1:Loop F2:Tread F3:ESP\nF4:Speed F5:AFK\nF6:TOP F7:LEG F8:ALL"
     hkInfo.TextColor3 = self.Config.textMuted
-    hkInfo.TextSize = 9
+    hkInfo.TextSize = 8
     hkInfo.Font = Enum.Font.Code
     hkInfo.TextXAlignment = Enum.TextXAlignment.Left
     hkInfo.TextYAlignment = Enum.TextYAlignment.Top
     hkInfo.Parent = tabMod
     self.Utils:createCorner(hkInfo, 6)
     self.Utils:createStroke(hkInfo, self.Config.accentCyan, 1, 0.5)
+    
+    -- Guardar referencias
+    self.GUI.treadmillInfo = treadmillInfo
+    self.GUI.btnRedetect = btnRedetect
 end
 
--- ✅ SECCIÓN LOG CON REGISTRO DE ROBOS
+-- ✅ PESTAÑA LOG
 function GUI:createTabLog()
     local tabLog = self.GUI.tabLog
     
@@ -525,7 +556,6 @@ function GUI:createTabLog()
     btnClearLog.Parent = tabLog
     self.Utils:createCorner(btnClearLog, 5)
     
-    -- ✅ ScrollFrame para el log (este es el que usa core.lua)
     local logScroll = Instance.new("ScrollingFrame")
     logScroll.Size = UDim2.new(1, -10, 1, -30)
     logScroll.Position = UDim2.new(0, 5, 0, 30)
@@ -549,7 +579,6 @@ function GUI:createTabLog()
     logListPadding.PaddingRight = UDim.new(0, 3)
     logListPadding.Parent = logScroll
     
-    -- ✅ Guardar referencia para que core.lua pueda usarla
     self.GUI.logScroll = logScroll
     self.GUI.btnClearLog = btnClearLog
 end
@@ -584,7 +613,7 @@ function GUI:createStatusBar()
     statsLabel.Size = UDim2.new(0.5, -5, 1, 0)
     statsLabel.Position = UDim2.new(0.5, 0, 0, 0)
     statsLabel.BackgroundTransparency = 1
-    statsLabel.Text = "🥚 0 | ️ 0 | 🏃 0s"
+    statsLabel.Text = "🥚 0 | 👁️ 0 | 🏃 0s"
     statsLabel.TextColor3 = self.Config.textSecondary
     statsLabel.TextSize = 8
     statsLabel.Font = Enum.Font.GothamBold
