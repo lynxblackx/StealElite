@@ -89,7 +89,7 @@ function GUI:createHeader()
     versionLabel.Size = UDim2.new(0, 70, 0, 12)
     versionLabel.Position = UDim2.new(0, 36, 1, -16)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v17 FINAL"
+    versionLabel.Text = "v17.1 FIX"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 7
     versionLabel.Font = Enum.Font.GothamBold
@@ -184,65 +184,35 @@ end
 function GUI:createTabRobo()
     local tabRobo = self.GUI.tabRobo
     
-    local s1, s1Offset = self.Utils:createSection(tabRobo, 
-        UDim2.new(1, 0, 0, 62), UDim2.new(0, 0, 0, 0),
-        "🎯 CONTROL DE ROBO", self.Config.accentGold)
-    
+    local s1, s1Offset = self.Utils:createSection(tabRobo, UDim2.new(1, 0, 0, 62), UDim2.new(0, 0, 0, 0), "🎯 CONTROL DE ROBO", self.Config.accentGold)
     local btnLoop = Instance.new("TextButton")
-    btnLoop.Size = UDim2.new(0.62, -3, 0, 30)
-    btnLoop.Position = UDim2.new(0, 6, 0, s1Offset)
-    btnLoop.BackgroundColor3 = self.Config.accentPink
-    btnLoop.Text = "▶ INICIAR LOOP"
-    btnLoop.TextColor3 = Color3.new(1, 1, 1)
-    btnLoop.TextSize = 10
-    btnLoop.Font = Enum.Font.GothamBold
-    btnLoop.BorderSizePixel = 0
-    btnLoop.AutoButtonColor = false
-    btnLoop.Parent = s1
-    self.Utils:createCorner(btnLoop, 7)
-    self.Utils:createGradient(btnLoop, self.Config.accentPink, Color3.fromRGB(180, 50, 150), 0)
+    btnLoop.Size = UDim2.new(0.62, -3, 0, 30); btnLoop.Position = UDim2.new(0, 6, 0, s1Offset)
+    btnLoop.BackgroundColor3 = self.Config.accentPink; btnLoop.Text = "▶ INICIAR LOOP"
+    btnLoop.TextColor3 = Color3.new(1, 1, 1); btnLoop.TextSize = 10; btnLoop.Font = Enum.Font.GothamBold
+    btnLoop.BorderSizePixel = 0; btnLoop.AutoButtonColor = false; btnLoop.Parent = s1
+    self.Utils:createCorner(btnLoop, 7); self.Utils:createGradient(btnLoop, self.Config.accentPink, Color3.fromRGB(180, 50, 150), 0)
     
     local btnStop = Instance.new("TextButton")
-    btnStop.Size = UDim2.new(0.36, -2, 0, 30)
-    btnStop.Position = UDim2.new(0.64, 0, 0, s1Offset)
-    btnStop.BackgroundColor3 = self.Config.danger
-    btnStop.Text = "⏸ STOP"
-    btnStop.TextColor3 = Color3.new(1, 1, 1)
-    btnStop.TextSize = 10
-    btnStop.Font = Enum.Font.GothamBold
-    btnStop.BorderSizePixel = 0
-    btnStop.AutoButtonColor = false
-    btnStop.Parent = s1
+    btnStop.Size = UDim2.new(0.36, -2, 0, 30); btnStop.Position = UDim2.new(0.64, 0, 0, s1Offset)
+    btnStop.BackgroundColor3 = self.Config.danger; btnStop.Text = " STOP"
+    btnStop.TextColor3 = Color3.new(1, 1, 1); btnStop.TextSize = 10; btnStop.Font = Enum.Font.GothamBold
+    btnStop.BorderSizePixel = 0; btnStop.AutoButtonColor = false; btnStop.Parent = s1
     self.Utils:createCorner(btnStop, 7)
     
     local delayInput = Instance.new("TextBox")
-    delayInput.Size = UDim2.new(0, 45, 0, 22)
-    delayInput.Position = UDim2.new(0, 6, 0, s1Offset + 34)
-    delayInput.BackgroundColor3 = self.Config.bgGlass
-    delayInput.Text = "0.5"
-    delayInput.TextColor3 = self.Config.textPrimary
-    delayInput.TextSize = 10
-    delayInput.Font = Enum.Font.GothamBold
-    delayInput.BorderSizePixel = 0
-    delayInput.PlaceholderText = "Delay"
-    delayInput.PlaceholderColor3 = self.Config.textMuted
-    delayInput.ClearTextOnFocus = false
-    delayInput.Parent = s1
+    delayInput.Size = UDim2.new(0, 45, 0, 22); delayInput.Position = UDim2.new(0, 6, 0, s1Offset + 34)
+    delayInput.BackgroundColor3 = self.Config.bgGlass; delayInput.Text = "0.5"
+    delayInput.TextColor3 = self.Config.textPrimary; delayInput.TextSize = 10; delayInput.Font = Enum.Font.GothamBold
+    delayInput.BorderSizePixel = 0; delayInput.PlaceholderText = "Delay"
+    delayInput.PlaceholderColor3 = self.Config.textMuted; delayInput.ClearTextOnFocus = false; delayInput.Parent = s1
     self.Utils:createCorner(delayInput, 5)
     
     local nameFilter = Instance.new("TextBox")
-    nameFilter.Size = UDim2.new(1, -55, 0, 22)
-    nameFilter.Position = UDim2.new(0, 55, 0, s1Offset + 34)
-    nameFilter.BackgroundColor3 = self.Config.bgGlass
-    nameFilter.Text = ""
-    nameFilter.TextColor3 = self.Config.textPrimary
-    nameFilter.TextSize = 9
-    nameFilter.Font = Enum.Font.Gotham
-    nameFilter.BorderSizePixel = 0
-    nameFilter.PlaceholderText = "🔍 Filtrar nombre..."
-    nameFilter.PlaceholderColor3 = self.Config.textMuted
-    nameFilter.ClearTextOnFocus = false
-    nameFilter.Parent = s1
+    nameFilter.Size = UDim2.new(1, -55, 0, 22); nameFilter.Position = UDim2.new(0, 55, 0, s1Offset + 34)
+    nameFilter.BackgroundColor3 = self.Config.bgGlass; nameFilter.Text = ""
+    nameFilter.TextColor3 = self.Config.textPrimary; nameFilter.TextSize = 9; nameFilter.Font = Enum.Font.Gotham
+    nameFilter.BorderSizePixel = 0; nameFilter.PlaceholderText = "🔍 Filtrar nombre..."
+    nameFilter.PlaceholderColor3 = self.Config.textMuted; nameFilter.ClearTextOnFocus = false; nameFilter.Parent = s1
     self.Utils:createCorner(nameFilter, 5)
     
     local function applyPreset(type)
@@ -255,212 +225,120 @@ function GUI:createTabRobo()
     end
     
     local btnPresetTop = Instance.new("TextButton")
-    btnPresetTop.Size = UDim2.new(0, 108, 0, 20)
-    btnPresetTop.Position = UDim2.new(0, 6, 0, 70)
-    btnPresetTop.BackgroundColor3 = self.Config.accentGold
-    btnPresetTop.Text = "👑 TOP (GOD+EXC+OG)"
-    btnPresetTop.TextColor3 = Color3.new(0, 0, 0)
-    btnPresetTop.TextSize = 8
-    btnPresetTop.Font = Enum.Font.GothamBold
-    btnPresetTop.BorderSizePixel = 0
-    btnPresetTop.Parent = tabRobo
-    self.Utils:createCorner(btnPresetTop, 6)
+    btnPresetTop.Size = UDim2.new(0, 108, 0, 20); btnPresetTop.Position = UDim2.new(0, 6, 0, 70)
+    btnPresetTop.BackgroundColor3 = self.Config.accentGold; btnPresetTop.Text = "👑 TOP (GOD+EXC+OG)"
+    btnPresetTop.TextColor3 = Color3.new(0, 0, 0); btnPresetTop.TextSize = 8; btnPresetTop.Font = Enum.Font.GothamBold
+    btnPresetTop.BorderSizePixel = 0; btnPresetTop.Parent = tabRobo; self.Utils:createCorner(btnPresetTop, 6)
     btnPresetTop.MouseButton1Click:Connect(function() applyPreset("TOP") end)
     
     local btnPresetLeg = Instance.new("TextButton")
-    btnPresetLeg.Size = UDim2.new(0, 108, 0, 20)
-    btnPresetLeg.Position = UDim2.new(0, 118, 0, 70)
-    btnPresetLeg.BackgroundColor3 = self.Config.accentCyan
-    btnPresetLeg.Text = "⭐ LEG+ (LEG+)"
-    btnPresetLeg.TextColor3 = Color3.new(0, 0, 0)
-    btnPresetLeg.TextSize = 8
-    btnPresetLeg.Font = Enum.Font.GothamBold
-    btnPresetLeg.BorderSizePixel = 0
-    btnPresetLeg.Parent = tabRobo
-    self.Utils:createCorner(btnPresetLeg, 6)
+    btnPresetLeg.Size = UDim2.new(0, 108, 0, 20); btnPresetLeg.Position = UDim2.new(0, 118, 0, 70)
+    btnPresetLeg.BackgroundColor3 = self.Config.accentCyan; btnPresetLeg.Text = "⭐ LEG+ (LEG+)"
+    btnPresetLeg.TextColor3 = Color3.new(0, 0, 0); btnPresetLeg.TextSize = 8; btnPresetLeg.Font = Enum.Font.GothamBold
+    btnPresetLeg.BorderSizePixel = 0; btnPresetLeg.Parent = tabRobo; self.Utils:createCorner(btnPresetLeg, 6)
     btnPresetLeg.MouseButton1Click:Connect(function() applyPreset("LEG") end)
     
     local btnPresetAll = Instance.new("TextButton")
-    btnPresetAll.Size = UDim2.new(0, 108, 0, 20)
-    btnPresetAll.Position = UDim2.new(0, 230, 0, 70)
-    btnPresetAll.BackgroundColor3 = self.Config.success
-    btnPresetAll.Text = " ALL IN"
-    btnPresetAll.TextColor3 = Color3.new(0, 0, 0)
-    btnPresetAll.TextSize = 8
-    btnPresetAll.Font = Enum.Font.GothamBold
-    btnPresetAll.BorderSizePixel = 0
-    btnPresetAll.Parent = tabRobo
-    self.Utils:createCorner(btnPresetAll, 6)
+    btnPresetAll.Size = UDim2.new(0, 108, 0, 20); btnPresetAll.Position = UDim2.new(0, 230, 0, 70)
+    btnPresetAll.BackgroundColor3 = self.Config.success; btnPresetAll.Text = "🌍 ALL IN"
+    btnPresetAll.TextColor3 = Color3.new(0, 0, 0); btnPresetAll.TextSize = 8; btnPresetAll.Font = Enum.Font.GothamBold
+    btnPresetAll.BorderSizePixel = 0; btnPresetAll.Parent = tabRobo; self.Utils:createCorner(btnPresetAll, 6)
     btnPresetAll.MouseButton1Click:Connect(function() applyPreset("ALL") end)
-    
-    local s2, s2Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 96),
-        "🎯 FILTROS DE ROBO", self.Config.accentGold)
-    
+
+    local s2, s2Offset = self.Utils:createSection(tabRobo, UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 96), "🎯 FILTROS DE ROBO", self.Config.accentGold)
     local stealButtons = {}
     local pillW, pillH, pillGapX, pillGapY = 62, 20, 4, 2
-    local pillStartX = 6
-    local pillStartY = s2Offset + 2
-    
+    local pillStartX = 6; local pillStartY = s2Offset + 2
     for i, rarity in ipairs(self.Shared.Rarities) do
-        local row = math.floor((i - 1) / 5)
-        local col = (i - 1) % 5
-        local x = pillStartX + col * (pillW + pillGapX)
-        local y = pillStartY + row * (pillH + pillGapY)
-        
-        local btn = self.Utils:createPillButton(s2,
-            UDim2.new(0, pillW, 0, pillH),
-            UDim2.new(0, x, 0, y),
-            rarity.icon .. " " .. rarity.short,
-            rarity.color, 7)
-        
+        local row = math.floor((i - 1) / 5); local col = (i - 1) % 5
+        local x = pillStartX + col * (pillW + pillGapX); local y = pillStartY + row * (pillH + pillGapY)
+        local btn = self.Utils:createPillButton(s2, UDim2.new(0, pillW, 0, pillH), UDim2.new(0, x, 0, y), rarity.icon .. " " .. rarity.short, rarity.color, 7)
         table.insert(stealButtons, {button = btn, rarity = rarity})
-        
         btn.MouseButton1Click:Connect(function()
             self.State.stealFilters[rarity.name] = not self.State.stealFilters[rarity.name]
             if self.State.stealFilters[rarity.name] then
-                btn.BackgroundColor3 = rarity.color
-                btn.Text = rarity.icon .. " " .. rarity.short
-                btn.TextColor3 = Color3.new(0, 0, 0)
+                btn.BackgroundColor3 = rarity.color; btn.Text = rarity.icon .. " " .. rarity.short; btn.TextColor3 = Color3.new(0, 0, 0)
             else
-                btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-                btn.Text = "✗" .. rarity.short
-                btn.TextColor3 = self.Config.textMuted
+                btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65); btn.Text = "✗" .. rarity.short; btn.TextColor3 = self.Config.textMuted
             end
         end)
     end
-    
     local btnAllSteal = Instance.new("TextButton")
-    btnAllSteal.Size = UDim2.new(0, 55, 0, 16)
-    btnAllSteal.Position = UDim2.new(0, 6, 0, pillStartY + 2*(pillH + pillGapY) + 2)
-    btnAllSteal.BackgroundColor3 = self.Config.success
-    btnAllSteal.Text = "✓ TODOS"
-    btnAllSteal.TextColor3 = Color3.new(0, 0, 0)
-    btnAllSteal.TextSize = 7
-    btnAllSteal.Font = Enum.Font.GothamBold
-    btnAllSteal.BorderSizePixel = 0
-    btnAllSteal.Parent = s2
-    self.Utils:createCorner(btnAllSteal, 5)
+    btnAllSteal.Size = UDim2.new(0, 55, 0, 16); btnAllSteal.Position = UDim2.new(0, 6, 0, pillStartY + 2*(pillH + pillGapY) + 2)
+    btnAllSteal.BackgroundColor3 = self.Config.success; btnAllSteal.Text = "✓ TODOS"
+    btnAllSteal.TextColor3 = Color3.new(0, 0, 0); btnAllSteal.TextSize = 7; btnAllSteal.Font = Enum.Font.GothamBold
+    btnAllSteal.BorderSizePixel = 0; btnAllSteal.Parent = s2; self.Utils:createCorner(btnAllSteal, 5)
     btnAllSteal.MouseButton1Click:Connect(function()
         for _, item in ipairs(stealButtons) do
-            self.State.stealFilters[item.rarity.name] = true
-            item.button.BackgroundColor3 = item.rarity.color
-            item.button.Text = item.rarity.icon .. " " .. item.rarity.short
-            item.button.TextColor3 = Color3.new(0, 0, 0)
+            self.State.stealFilters[item.rarity.name] = true; item.button.BackgroundColor3 = item.rarity.color
+            item.button.Text = item.rarity.icon .. " " .. item.rarity.short; item.button.TextColor3 = Color3.new(0, 0, 0)
         end
     end)
-    
     local btnNoneSteal = Instance.new("TextButton")
-    btnNoneSteal.Size = UDim2.new(0, 55, 0, 16)
-    btnNoneSteal.Position = UDim2.new(0, 64, 0, pillStartY + 2*(pillH + pillGapY) + 2)
-    btnNoneSteal.BackgroundColor3 = self.Config.danger
-    btnNoneSteal.Text = "✗ NING"
-    btnNoneSteal.TextColor3 = Color3.new(1, 1, 1)
-    btnNoneSteal.TextSize = 7
-    btnNoneSteal.Font = Enum.Font.GothamBold
-    btnNoneSteal.BorderSizePixel = 0
-    btnNoneSteal.Parent = s2
-    self.Utils:createCorner(btnNoneSteal, 5)
+    btnNoneSteal.Size = UDim2.new(0, 55, 0, 16); btnNoneSteal.Position = UDim2.new(0, 64, 0, pillStartY + 2*(pillH + pillGapY) + 2)
+    btnNoneSteal.BackgroundColor3 = self.Config.danger; btnNoneSteal.Text = "✗ NING"
+    btnNoneSteal.TextColor3 = Color3.new(1, 1, 1); btnNoneSteal.TextSize = 7; btnNoneSteal.Font = Enum.Font.GothamBold
+    btnNoneSteal.BorderSizePixel = 0; btnNoneSteal.Parent = s2; self.Utils:createCorner(btnNoneSteal, 5)
     btnNoneSteal.MouseButton1Click:Connect(function()
         for _, item in ipairs(stealButtons) do
-            self.State.stealFilters[item.rarity.name] = false
-            item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "✗" .. item.rarity.short
-            item.button.TextColor3 = self.Config.textMuted
+            self.State.stealFilters[item.rarity.name] = false; item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+            item.button.Text = "✗" .. item.rarity.short; item.button.TextColor3 = self.Config.textMuted
         end
     end)
-    
-    local s3, s3Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 186),
-        "👁️ FILTROS DE ESP", self.Config.accentCyan)
-    
+
+    local s3, s3Offset = self.Utils:createSection(tabRobo, UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 186), "👁️ FILTROS DE ESP", self.Config.accentCyan)
     local espButtons = {}
     local espPillStartY = s3Offset + 2
-    
     for i, rarity in ipairs(self.Shared.Rarities) do
-        local row = math.floor((i - 1) / 5)
-        local col = (i - 1) % 5
-        local x = pillStartX + col * (pillW + pillGapX)
-        local y = espPillStartY + row * (pillH + pillGapY)
-        
-        local btn = self.Utils:createPillButton(s3,
-            UDim2.new(0, pillW, 0, pillH),
-            UDim2.new(0, x, 0, y),
-            rarity.icon .. " " .. rarity.short,
-            rarity.color, 7)
-        
+        local row = math.floor((i - 1) / 5); local col = (i - 1) % 5
+        local x = pillStartX + col * (pillW + pillGapX); local y = espPillStartY + row * (pillH + pillGapY)
+        local btn = self.Utils:createPillButton(s3, UDim2.new(0, pillW, 0, pillH), UDim2.new(0, x, 0, y), rarity.icon .. " " .. rarity.short, rarity.color, 7)
         table.insert(espButtons, {button = btn, rarity = rarity})
-        
         btn.MouseButton1Click:Connect(function()
             self.State.espFilters[rarity.name] = not self.State.espFilters[rarity.name]
             if self.State.espFilters[rarity.name] then
-                btn.BackgroundColor3 = rarity.color
-                btn.Text = rarity.icon .. " " .. rarity.short
-                btn.TextColor3 = Color3.new(0, 0, 0)
+                btn.BackgroundColor3 = rarity.color; btn.Text = rarity.icon .. " " .. rarity.short; btn.TextColor3 = Color3.new(0, 0, 0)
             else
-                btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-                btn.Text = "✗" .. rarity.short
-                btn.TextColor3 = self.Config.textMuted
+                btn.BackgroundColor3 = Color3.fromRGB(40, 45, 65); btn.Text = "✗" .. rarity.short; btn.TextColor3 = self.Config.textMuted
             end
             if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
         end)
     end
-    
     local btnAllEsp = Instance.new("TextButton")
-    btnAllEsp.Size = UDim2.new(0, 55, 0, 16)
-    btnAllEsp.Position = UDim2.new(0, 6, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
-    btnAllEsp.BackgroundColor3 = self.Config.success
-    btnAllEsp.Text = "✓ TODOS"
-    btnAllEsp.TextColor3 = Color3.new(0, 0, 0)
-    btnAllEsp.TextSize = 7
-    btnAllEsp.Font = Enum.Font.GothamBold
-    btnAllEsp.BorderSizePixel = 0
-    btnAllEsp.Parent = s3
-    self.Utils:createCorner(btnAllEsp, 5)
+    btnAllEsp.Size = UDim2.new(0, 55, 0, 16); btnAllEsp.Position = UDim2.new(0, 6, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
+    btnAllEsp.BackgroundColor3 = self.Config.success; btnAllEsp.Text = "✓ TODOS"
+    btnAllEsp.TextColor3 = Color3.new(0, 0, 0); btnAllEsp.TextSize = 7; btnAllEsp.Font = Enum.Font.GothamBold
+    btnAllEsp.BorderSizePixel = 0; btnAllEsp.Parent = s3; self.Utils:createCorner(btnAllEsp, 5)
     btnAllEsp.MouseButton1Click:Connect(function()
         for _, item in ipairs(espButtons) do
-            self.State.espFilters[item.rarity.name] = true
-            item.button.BackgroundColor3 = item.rarity.color
-            item.button.Text = item.rarity.icon .. " " .. item.rarity.short
-            item.button.TextColor3 = Color3.new(0, 0, 0)
+            self.State.espFilters[item.rarity.name] = true; item.button.BackgroundColor3 = item.rarity.color
+            item.button.Text = item.rarity.icon .. " " .. item.rarity.short; item.button.TextColor3 = Color3.new(0, 0, 0)
         end
         if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
-    
     local btnNoneEsp = Instance.new("TextButton")
-    btnNoneEsp.Size = UDim2.new(0, 55, 0, 16)
-    btnNoneEsp.Position = UDim2.new(0, 64, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
-    btnNoneEsp.BackgroundColor3 = self.Config.danger
-    btnNoneEsp.Text = "✗ NING"
-    btnNoneEsp.TextColor3 = Color3.new(1, 1, 1)
-    btnNoneEsp.TextSize = 7
-    btnNoneEsp.Font = Enum.Font.GothamBold
-    btnNoneEsp.BorderSizePixel = 0
-    btnNoneEsp.Parent = s3
-    self.Utils:createCorner(btnNoneEsp, 5)
+    btnNoneEsp.Size = UDim2.new(0, 55, 0, 16); btnNoneEsp.Position = UDim2.new(0, 64, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
+    btnNoneEsp.BackgroundColor3 = self.Config.danger; btnNoneEsp.Text = "✗ NING"
+    btnNoneEsp.TextColor3 = Color3.new(1, 1, 1); btnNoneEsp.TextSize = 7; btnNoneEsp.Font = Enum.Font.GothamBold
+    btnNoneEsp.BorderSizePixel = 0; btnNoneEsp.Parent = s3; self.Utils:createCorner(btnNoneEsp, 5)
     btnNoneEsp.MouseButton1Click:Connect(function()
         for _, item in ipairs(espButtons) do
-            self.State.espFilters[item.rarity.name] = false
-            item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "✗" .. item.rarity.short
-            item.button.TextColor3 = self.Config.textMuted
+            self.State.espFilters[item.rarity.name] = false; item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
+            item.button.Text = "✗" .. item.rarity.short; item.button.TextColor3 = self.Config.textMuted
         end
         if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
-    
-    self.GUI.btnLoop = btnLoop
-    self.GUI.btnStop = btnStop
-    self.GUI.delayInput = delayInput
-    self.GUI.nameFilter = nameFilter
-    self.Buttons.steal = stealButtons
-    self.Buttons.esp = espButtons
+
+    self.GUI.btnLoop = btnLoop; self.GUI.btnStop = btnStop
+    self.GUI.delayInput = delayInput; self.GUI.nameFilter = nameFilter
+    self.Buttons.steal = stealButtons; self.Buttons.esp = espButtons
 end
 
--- ✅ PESTAÑA MOD con todos los switches
+-- ✅ PESTAÑA MOD CON SWITCHES (Incluye Rebirth)
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
-    local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 8), "️ ESP Visual", true)
+    local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 8), "👁️ ESP Visual", true)
     local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 40), "🏃 Speed Boost", true)
     local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 72), "🛡️ Anti-AFK", true)
     local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 104), "🏃 Auto Treadmill", false)
@@ -547,6 +425,7 @@ function GUI:createTabLog()
     logListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     logListLayout.Parent = logScroll
     
+    -- ✅ CORREGIDO: UDim en vez de UDim2
     local logListPadding = Instance.new("UIPadding")
     logListPadding.PaddingTop = UDim.new(0, 3)
     logListPadding.PaddingLeft = UDim.new(0, 3)

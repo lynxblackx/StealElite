@@ -1,5 +1,5 @@
 -- ============================================
--- STEAL ELITE v17 - LOADER
+-- STEAL ELITE v17.1 - LOADER
 -- ============================================
 local BASE_URL = "https://raw.githubusercontent.com/lynxblackx/StealElite/refs/heads/main/modules/"
 
@@ -8,7 +8,7 @@ local Services = {
     Workspace = game:GetService("Workspace"),
     UserInputService = game:GetService("UserInputService"),
     CoreGui = game:GetService("CoreGui"),
-    ReplicatedStorage = game:GetService("ReplicatedStorage"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"), -- ✅ Agregado
     HttpService = game:GetService("HttpService")
 }
 
@@ -31,7 +31,7 @@ for _, gui in pairs(Services.CoreGui:GetChildren()) do
     if gui.Name == "StealEliteV17" then gui:Destroy() end
 end
 
-print("🥷 Steal Elite v17 - Iniciando...")
+print("🥷 Steal Elite v17.1 - Iniciando...")
 
 local ConfigData = loadModule("config")
 if not ConfigData then return end
@@ -76,4 +76,4 @@ Shared.Core = Core
 if Settings then Settings:Init(Shared) end
 
 Core:StartLoops(Shared)
-print("🚀 Steal Elite v17 listo")
+print("🚀 Steal Elite v17.1 listo")

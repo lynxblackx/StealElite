@@ -49,7 +49,7 @@ function Utils:createPillButton(parent, size, position, text, color, textSize)
     return btn
 end
 
--- ✅ Switch SIN handler interno (solo expone el botón)
+-- ✅ SWITCH ARREGLADO: Sin handler interno, solo visual
 function Utils:createSwitch(parent, position, text, initialState)
     local container = Instance.new("Frame")
     container.Size = UDim2.new(0, 110, 0, 28)
@@ -87,7 +87,7 @@ function Utils:createSwitch(parent, position, text, initialState)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = container
     
-    -- Botón SIN handler propio
+    -- Botón transparente SIN handler propio
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundTransparency = 1
@@ -145,9 +145,7 @@ function Utils:createSection(parent, size, position, title, titleColor)
     return section, 6
 end
 
-function Utils:log(msg)
-    print("[StealElite] " .. msg)
-end
+function Utils:log(msg) print("[StealElite] " .. msg) end
 
 function Utils:teleportTo(position, offset)
     local character = self.Shared.Player.Character
@@ -161,11 +159,7 @@ end
 function Utils:detectRarity(egg)
     local State = self.Shared.State
     local Rarities = self.Shared.Rarities
-    
-    if State.rarityCache and State.rarityCache[egg] then
-        return State.rarityCache[egg]
-    end
-    
+    if State.rarityCache and State.rarityCache[egg] then return State.rarityCache[egg] end
     local rarityAttr = egg:GetAttribute("Rarity")
     if rarityAttr and type(rarityAttr) == "string" then
         for _, r in ipairs(Rarities) do
@@ -176,7 +170,6 @@ function Utils:detectRarity(egg)
             end
         end
     end
-    
     local eggGui = egg:FindFirstChild("EggGui")
     if eggGui then
         for _, obj in ipairs(eggGui:GetDescendants()) do
@@ -194,34 +187,17 @@ function Utils:detectRarity(egg)
             end
         end
     end
-    
     return "Unknown"
 end
 
-function Utils:getEggWeight(egg)
-    return tonumber(egg:GetAttribute("WeightKG")) or 0
-end
-
+function Utils:getEggWeight(egg) return tonumber(egg:GetAttribute("WeightKG")) or 0 end
 function Utils:getRarityPriority(rarity)
-    for _, r in ipairs(self.Shared.Rarities) do
-        if r.name == rarity then return r.priority end
-    end
-    return 0
+    for _, r in ipairs(self.Shared.Rarities) do if r.name == rarity then return r.priority end end; return 0
 end
-
 function Utils:getRarityColor(rarity)
-    for _, r in ipairs(self.Shared.Rarities) do
-        if r.name == rarity then return r.color end
-    end
-    return self.Config.textMuted
+    for _, r in ipairs(self.Shared.Rarities) do if r.name == rarity then return r.color end end; return self.Config.textMuted
 end
-
-function Utils:passesStealFilter(rarity)
-    return self.Shared.State.stealFilters[rarity] or false
-end
-
-function Utils:passesEspFilter(rarity)
-    return self.Shared.State.espFilters[rarity] or false
-end
+function Utils:passesStealFilter(rarity) return self.Shared.State.stealFilters[rarity] or false end
+function Utils:passesEspFilter(rarity) return self.Shared.State.espFilters[rarity] or false end
 
 return Utils

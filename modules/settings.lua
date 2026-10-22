@@ -9,6 +9,7 @@ function Settings:save()
     local data = {
         speedEnabled = self.Shared.State.speedEnabled, treadmillEnabled = self.Shared.State.treadmillEnabled,
         afkEnabled = self.Shared.State.afkEnabled, espEnabled = self.Shared.State.espEnabled,
+        rebirthEnabled = self.Shared.State.rebirthEnabled,
         stealFilters = self.Shared.State.stealFilters, espFilters = self.Shared.State.espFilters,
         currentDelay = tonumber(self.Shared.GUI.delayInput.Text) or 0.5
     }
@@ -27,6 +28,7 @@ function Settings:load()
             if data.treadmillEnabled ~= nil then self.Shared.State.treadmillEnabled = data.treadmillEnabled end
             if data.afkEnabled ~= nil then self.Shared.State.afkEnabled = data.afkEnabled end
             if data.espEnabled ~= nil then self.Shared.State.espEnabled = data.espEnabled end
+            if data.rebirthEnabled ~= nil then self.Shared.State.rebirthEnabled = data.rebirthEnabled end
             if data.stealFilters then for k, v in pairs(data.stealFilters) do self.Shared.State.stealFilters[k] = v end end
             if data.espFilters then for k, v in pairs(data.espFilters) do self.Shared.State.espFilters[k] = v end end
             if data.currentDelay then self.Shared.GUI.delayInput.Text = tostring(data.currentDelay) end
