@@ -1,5 +1,5 @@
 -- ============================================
--- STEAL ELITE v16.7 - LOADER
+-- STEAL ELITE v17 - LOADER
 -- ============================================
 local BASE_URL = "https://raw.githubusercontent.com/lynxblackx/StealElite/refs/heads/main/modules/"
 
@@ -8,6 +8,7 @@ local Services = {
     Workspace = game:GetService("Workspace"),
     UserInputService = game:GetService("UserInputService"),
     CoreGui = game:GetService("CoreGui"),
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
     HttpService = game:GetService("HttpService")
 }
 
@@ -27,10 +28,10 @@ local function loadModule(name)
 end
 
 for _, gui in pairs(Services.CoreGui:GetChildren()) do
-    if gui.Name == "StealEliteV16" then gui:Destroy() end
+    if gui.Name == "StealEliteV17" then gui:Destroy() end
 end
 
-print("🥷 Steal Elite v16.7 - Iniciando...")
+print("🥷 Steal Elite v17 - Iniciando...")
 
 local ConfigData = loadModule("config")
 if not ConfigData then return end
@@ -50,10 +51,10 @@ local Shared = {
     Utils = Utils,
     State = {
         loopRunning = false, speedEnabled = true, afkEnabled = true,
-        espEnabled = true, treadmillEnabled = false, onTreadmill = false,
-        stolenCount = 0, failedCount = 0, afkCount = 0, espCount = 0,
-        treadmillTime = 0, currentSlot = 1, lastInput = tick(), lastAfk = tick(),
-        isAfk = false, isMinimized = false,
+        espEnabled = true, treadmillEnabled = false, rebirthEnabled = false,
+        onTreadmill = false, stolenCount = 0, failedCount = 0, afkCount = 0,
+        espCount = 0, treadmillTime = 0, currentSlot = 1,
+        lastInput = tick(), lastAfk = tick(), isAfk = false, isMinimized = false,
         robLog = {}, eggs = {}, eggEntries = {}, espObjects = {},
         stealFilters = {}, espFilters = {}, rarityCache = {}
     },
@@ -75,4 +76,4 @@ Shared.Core = Core
 if Settings then Settings:Init(Shared) end
 
 Core:StartLoops(Shared)
-print(" Steal Elite v16.7 listo")
+print("🚀 Steal Elite v17 listo")
