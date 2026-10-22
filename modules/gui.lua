@@ -1,5 +1,5 @@
 -- ============================================
--- GUI - INTERFAZ COMPLETA
+-- GUI - VERSIÓN CORREGIDA
 -- ============================================
 local GUI = {}
 
@@ -39,14 +39,6 @@ function GUI:createMainFrame()
     mainFrame.Parent = screenGui
     self.Utils:createCorner(mainFrame, 14)
     self.Utils:createStroke(mainFrame, self.Config.accentCyan, 1.5, 0.4)
-    
-    -- ✅ Animación de entrada
-    mainFrame.Position = UDim2.new(0.82, 0, 0.5, -self.Config.height/2 - 50)
-    mainFrame.BackgroundTransparency = 1
-    game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad), {
-        Position = UDim2.new(0.82, 0, 0.5, -self.Config.height/2),
-        BackgroundTransparency = 0
-    }):Play()
     
     self.GUI.screenGui = screenGui
     self.GUI.mainFrame = mainFrame
@@ -97,7 +89,7 @@ function GUI:createHeader()
     titleLabel.Parent = header
     
     local versionLabel = Instance.new("TextLabel")
-    versionLabel.Size = UDim2.new(0, 50, 0, 12)
+    versionLabel.Size = UDim2.new(0, 60, 0, 12)
     versionLabel.Position = UDim2.new(0, 36, 1, -16)
     versionLabel.BackgroundTransparency = 1
     versionLabel.Text = "v16 MODULAR"
@@ -192,7 +184,7 @@ function GUI:createTabs()
         return frame
     end
     
-    self.GUI.tabRobo = createTab("ROBO", "🎯 ROBO", 2)
+    self.GUI.tabRobo = createTab("ROBO", " ROBO", 2)
     self.GUI.tabMod = createTab("MOD", "⚙️ MOD", 122)
     self.GUI.tabLog = createTab("LOG", "📋 LOG", 242)
 end
@@ -200,10 +192,14 @@ end
 function GUI:createTabRobo()
     local tabRobo = self.GUI.tabRobo
     
-    -- Control de Robo
+    -- ============================================
+    -- SECCIÓN 1: CONTROL DE ROBO
+    -- ============================================
     local s1, s1Offset = self.Utils:createSection(tabRobo, 
-        UDim2.new(1, 0, 0, 62), UDim2.new(0, 0, 0, 0),
-        " CONTROL DE ROBO", self.Config.accentGold)
+        UDim2.new(1, 0, 0, 62), 
+        UDim2.new(0, 0, 0, 0),
+        "🎯 CONTROL DE ROBO",
+        self.Config.accentGold)
     
     local btnLoop = Instance.new("TextButton")
     btnLoop.Size = UDim2.new(0.62, -3, 0, 30)
@@ -215,7 +211,7 @@ function GUI:createTabRobo()
     btnLoop.Font = Enum.Font.GothamBold
     btnLoop.BorderSizePixel = 0
     btnLoop.AutoButtonColor = false
-    btnLoop.Parent = s1
+    btnLoop.Parent = s1  -- ✅ Padre es s1, no tabRobo
     self.Utils:createCorner(btnLoop, 7)
     self.Utils:createGradient(btnLoop, self.Config.accentPink, Color3.fromRGB(180, 50, 150), 0)
     
@@ -229,7 +225,7 @@ function GUI:createTabRobo()
     btnStop.Font = Enum.Font.GothamBold
     btnStop.BorderSizePixel = 0
     btnStop.AutoButtonColor = false
-    btnStop.Parent = s1
+    btnStop.Parent = s1  -- ✅ Padre es s1
     self.Utils:createCorner(btnStop, 7)
     
     local delayInput = Instance.new("TextBox")
@@ -244,7 +240,7 @@ function GUI:createTabRobo()
     delayInput.PlaceholderText = "Delay"
     delayInput.PlaceholderColor3 = self.Config.textMuted
     delayInput.ClearTextOnFocus = false
-    delayInput.Parent = s1
+    delayInput.Parent = s1  -- ✅ Padre es s1
     self.Utils:createCorner(delayInput, 5)
     
     local nameFilter = Instance.new("TextBox")
@@ -259,10 +255,12 @@ function GUI:createTabRobo()
     nameFilter.PlaceholderText = "🔍 Filtrar nombre..."
     nameFilter.PlaceholderColor3 = self.Config.textMuted
     nameFilter.ClearTextOnFocus = false
-    nameFilter.Parent = s1
+    nameFilter.Parent = s1  -- ✅ Padre es s1
     self.Utils:createCorner(nameFilter, 5)
     
-    -- Presets
+    -- ============================================
+    -- PRESETS
+    -- ============================================
     local function applyPreset(type)
         for _, r in ipairs(self.Shared.Rarities) do
             if type == "TOP" then self.State.stealFilters[r.name] = (r.name == "God" or r.name == "Exclusive" or r.name == "OG")
@@ -277,7 +275,7 @@ function GUI:createTabRobo()
     btnPresetTop.Size = UDim2.new(0, 108, 0, 20)
     btnPresetTop.Position = UDim2.new(0, 6, 0, 70)
     btnPresetTop.BackgroundColor3 = self.Config.accentGold
-    btnPresetTop.Text = "👑 TOP (GOD+EXC+OG)"
+    btnPresetTop.Text = " TOP (GOD+EXC+OG)"
     btnPresetTop.TextColor3 = Color3.new(0, 0, 0)
     btnPresetTop.TextSize = 8
     btnPresetTop.Font = Enum.Font.GothamBold
@@ -303,7 +301,7 @@ function GUI:createTabRobo()
     btnPresetAll.Size = UDim2.new(0, 108, 0, 20)
     btnPresetAll.Position = UDim2.new(0, 230, 0, 70)
     btnPresetAll.BackgroundColor3 = self.Config.success
-    btnPresetAll.Text = "🌍 ALL IN"
+    btnPresetAll.Text = " ALL IN"
     btnPresetAll.TextColor3 = Color3.new(0, 0, 0)
     btnPresetAll.TextSize = 8
     btnPresetAll.Font = Enum.Font.GothamBold
@@ -312,15 +310,19 @@ function GUI:createTabRobo()
     self.Utils:createCorner(btnPresetAll, 6)
     btnPresetAll.MouseButton1Click:Connect(function() applyPreset("ALL") end)
     
-    -- Filtros de Robo
+    -- ============================================
+    -- SECCIÓN 2: FILTROS DE ROBO (con botones DENTRO)
+    -- ============================================
     local s2, s2Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 96),
-        " FILTROS DE ROBO", self.Config.accentGold)
+        UDim2.new(1, 0, 0, 85),
+        UDim2.new(0, 0, 0, 96),
+        "🎯 FILTROS DE ROBO",
+        self.Config.accentGold)
     
     local stealButtons = {}
     local pillW, pillH, pillGapX, pillGapY = 62, 20, 4, 2
     local pillStartX = 6
-    local pillStartY = s2Offset + 2
+    local pillStartY = s2Offset + 2  -- ✅ Relativo a s2
     
     for i, rarity in ipairs(self.Shared.Rarities) do
         local row = math.floor((i - 1) / 5)
@@ -328,7 +330,8 @@ function GUI:createTabRobo()
         local x = pillStartX + col * (pillW + pillGapX)
         local y = pillStartY + row * (pillH + pillGapY)
         
-        local btn = self.Utils:createPillButton(tabRobo,
+        -- ✅ Padre es s2, NO tabRobo
+        local btn = self.Utils:createPillButton(s2,
             UDim2.new(0, pillW, 0, pillH),
             UDim2.new(0, x, 0, y),
             rarity.icon .. " " .. rarity.short,
@@ -360,7 +363,7 @@ function GUI:createTabRobo()
     btnAllSteal.TextSize = 7
     btnAllSteal.Font = Enum.Font.GothamBold
     btnAllSteal.BorderSizePixel = 0
-    btnAllSteal.Parent = tabRobo
+    btnAllSteal.Parent = s2  -- ✅ Padre es s2
     self.Utils:createCorner(btnAllSteal, 5)
     btnAllSteal.MouseButton1Click:Connect(function()
         for _, item in ipairs(stealButtons) do
@@ -381,7 +384,7 @@ function GUI:createTabRobo()
     btnNoneSteal.TextSize = 7
     btnNoneSteal.Font = Enum.Font.GothamBold
     btnNoneSteal.BorderSizePixel = 0
-    btnNoneSteal.Parent = tabRobo
+    btnNoneSteal.Parent = s2  -- ✅ Padre es s2
     self.Utils:createCorner(btnNoneSteal, 5)
     btnNoneSteal.MouseButton1Click:Connect(function()
         for _, item in ipairs(stealButtons) do
@@ -393,19 +396,26 @@ function GUI:createTabRobo()
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
-    -- ✅ Filtros de ESP INDEPENDIENTES
+    -- ============================================
+    -- SECCIÓN 3: FILTROS DE ESP (con botones DENTRO)
+    -- ============================================
     local s3, s3Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 186),
-        "👁️ FILTROS DE ESP", self.Config.accentCyan)
+        UDim2.new(1, 0, 0, 85),
+        UDim2.new(0, 0, 0, 186),
+        "👁️ FILTROS DE ESP",
+        self.Config.accentCyan)
     
     local espButtons = {}
+    local espPillStartY = s3Offset + 2  -- ✅ Relativo a s3
+    
     for i, rarity in ipairs(self.Shared.Rarities) do
         local row = math.floor((i - 1) / 5)
         local col = (i - 1) % 5
         local x = pillStartX + col * (pillW + pillGapX)
-        local y = pillStartY + row * (pillH + pillGapY)
+        local y = espPillStartY + row * (pillH + pillGapY)
         
-        local btn = self.Utils:createPillButton(tabRobo,
+        -- ✅ Padre es s3, NO tabRobo
+        local btn = self.Utils:createPillButton(s3,
             UDim2.new(0, pillW, 0, pillH),
             UDim2.new(0, x, 0, y),
             rarity.icon .. " " .. rarity.short,
@@ -431,14 +441,14 @@ function GUI:createTabRobo()
     
     local btnAllEsp = Instance.new("TextButton")
     btnAllEsp.Size = UDim2.new(0, 55, 0, 16)
-    btnAllEsp.Position = UDim2.new(0, 6, 0, pillStartY + 2*(pillH + pillGapY) + 2)
+    btnAllEsp.Position = UDim2.new(0, 6, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
     btnAllEsp.BackgroundColor3 = self.Config.success
     btnAllEsp.Text = "✓ TODOS"
     btnAllEsp.TextColor3 = Color3.new(0, 0, 0)
     btnAllEsp.TextSize = 7
     btnAllEsp.Font = Enum.Font.GothamBold
     btnAllEsp.BorderSizePixel = 0
-    btnAllEsp.Parent = tabRobo
+    btnAllEsp.Parent = s3  -- ✅ Padre es s3
     self.Utils:createCorner(btnAllEsp, 5)
     btnAllEsp.MouseButton1Click:Connect(function()
         for _, item in ipairs(espButtons) do
@@ -452,14 +462,14 @@ function GUI:createTabRobo()
     
     local btnNoneEsp = Instance.new("TextButton")
     btnNoneEsp.Size = UDim2.new(0, 55, 0, 16)
-    btnNoneEsp.Position = UDim2.new(0, 64, 0, pillStartY + 2*(pillH + pillGapY) + 2)
+    btnNoneEsp.Position = UDim2.new(0, 64, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
     btnNoneEsp.BackgroundColor3 = self.Config.danger
-    btnNoneEsp.Text = " NING"
+    btnNoneEsp.Text = "✗ NING"
     btnNoneEsp.TextColor3 = Color3.new(1, 1, 1)
     btnNoneEsp.TextSize = 7
     btnNoneEsp.Font = Enum.Font.GothamBold
     btnNoneEsp.BorderSizePixel = 0
-    btnNoneEsp.Parent = tabRobo
+    btnNoneEsp.Parent = s3  -- ✅ Padre es s3
     self.Utils:createCorner(btnNoneEsp, 5)
     btnNoneEsp.MouseButton1Click:Connect(function()
         for _, item in ipairs(espButtons) do
@@ -471,15 +481,94 @@ function GUI:createTabRobo()
         if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
     
+    -- ============================================
+    -- SECCIÓN 4: LISTA DE HUEVOS
+    -- ============================================
+    local s5, s5Offset = self.Utils:createSection(tabRobo,
+        UDim2.new(1, 0, 0, 95),
+        UDim2.new(0, 0, 0, 276),
+        "🥚 HUEVOS DETECTADOS",
+        self.Config.accentGold)
+    
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, -12, 1, -32)
+    scrollFrame.Position = UDim2.new(0, 6, 0, s5Offset + 2)
+    scrollFrame.BackgroundColor3 = self.Config.bgGlass
+    scrollFrame.BorderSizePixel = 0
+    scrollFrame.ScrollBarThickness = 3
+    scrollFrame.ScrollBarImageColor3 = self.Config.accentCyan
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scrollFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    scrollFrame.Parent = s5  -- ✅ Padre es s5
+    self.Utils:createCorner(scrollFrame, 6)
+    
+    local listLayout = Instance.new("UIListLayout")
+    listLayout.Padding = UDim.new(0, 2)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Parent = scrollFrame
+    
+    local listPadding = Instance.new("UIPadding")
+    listPadding.PaddingTop = UDim.new(0, 2)
+    listPadding.PaddingLeft = UDim.new(0, 2)    -- ✅ UDim (no UDim2)
+    listPadding.PaddingRight = UDim.new(0, 2)   -- ✅ UDim (no UDim2)
+    listPadding.Parent = scrollFrame
+    
+    -- ============================================
+    -- SECCIÓN 5: REGISTRO DE ROBOS
+    -- ============================================
+    local s6, s6Offset = self.Utils:createSection(tabRobo,
+        UDim2.new(1, 0, 0, 75),
+        UDim2.new(0, 0, 0, 376),
+        "📋 REGISTRO DE ROBOS",
+        self.Config.accentCyan)
+    
+    local btnClearLog = Instance.new("TextButton")
+    btnClearLog.Size = UDim2.new(0, 60, 0, 16)
+    btnClearLog.Position = UDim2.new(1, -65, 0, 6)
+    btnClearLog.BackgroundColor3 = self.Config.bgGlass
+    btnClearLog.Text = "️ Limpiar"
+    btnClearLog.TextColor3 = self.Config.textSecondary
+    btnClearLog.TextSize = 7
+    btnClearLog.Font = Enum.Font.GothamBold
+    btnClearLog.BorderSizePixel = 0
+    btnClearLog.Parent = s6  -- ✅ Padre es s6
+    self.Utils:createCorner(btnClearLog, 4)
+    
+    local logScroll = Instance.new("ScrollingFrame")
+    logScroll.Size = UDim2.new(1, -12, 1, -32)
+    logScroll.Position = UDim2.new(0, 6, 0, s6Offset + 2)
+    logScroll.BackgroundColor3 = self.Config.bgGlass
+    logScroll.BorderSizePixel = 0
+    logScroll.ScrollBarThickness = 3
+    logScroll.ScrollBarImageColor3 = self.Config.accentCyan
+    logScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    logScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    logScroll.Parent = s6  -- ✅ Padre es s6
+    self.Utils:createCorner(logScroll, 6)
+    
+    local logListLayout = Instance.new("UIListLayout")
+    logListLayout.Padding = UDim.new(0, 1)
+    logListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    logListLayout.Parent = logScroll
+    
+    local logListPadding = Instance.new("UIPadding")
+    logListPadding.PaddingTop = UDim.new(0, 2)
+    logListPadding.PaddingLeft = UDim.new(0, 2)    -- ✅ UDim (no UDim2)
+    logListPadding.PaddingRight = UDim.new(0, 2)   -- ✅ UDim (no UDim2)
+    logListPadding.Parent = logScroll
+    
+    -- Guardar referencias
     self.GUI.btnLoop = btnLoop
     self.GUI.btnStop = btnStop
     self.GUI.delayInput = delayInput
     self.GUI.nameFilter = nameFilter
+    self.GUI.scrollFrame = scrollFrame
+    self.GUI.logScroll = logScroll
+    self.GUI.btnClearLog = btnClearLog
     self.Buttons.steal = stealButtons
     self.Buttons.esp = espButtons
 end
 
--- ✅ PESTAÑA MOD con toggles
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
@@ -493,15 +582,15 @@ function GUI:createTabMod()
     self.Switches.afk = switchAfk
     self.Switches.treadmill = switchTreadmill
     
-    -- Info de atajos
+    -- Info de atajos (texto más corto para que quepa)
     local hkInfo = Instance.new("TextLabel")
-    hkInfo.Size = UDim2.new(1, -10, 0, 90)
+    hkInfo.Size = UDim2.new(1, -10, 0, 100)
     hkInfo.Position = UDim2.new(0, 5, 0, 140)
     hkInfo.BackgroundColor3 = self.Config.bgGlass
     hkInfo.BorderSizePixel = 0
-    hkInfo.Text = "️ ATAJOS DE TECLADO:\n\nF1: Loop | F2: Treadmill | F3: ESP\nF4: Speed | F5: AFK\nF6: TOP | F7: LEG+ | F8: ALL"
+    hkInfo.Text = "⌨️ ATAJOS:\nF1:Loop F2:Tread F3:ESP\nF4:Speed F5:AFK\nF6:TOP F7:LEG F8:ALL"
     hkInfo.TextColor3 = self.Config.textMuted
-    hkInfo.TextSize = 8
+    hkInfo.TextSize = 9
     hkInfo.Font = Enum.Font.Code
     hkInfo.TextXAlignment = Enum.TextXAlignment.Left
     hkInfo.TextYAlignment = Enum.TextYAlignment.Top
@@ -510,7 +599,6 @@ function GUI:createTabMod()
     self.Utils:createStroke(hkInfo, self.Config.accentCyan, 1, 0.5)
 end
 
--- ✅ PESTAÑA LOG
 function GUI:createTabLog()
     local tabLog = self.GUI.tabLog
     
@@ -545,12 +633,12 @@ function GUI:createTabLog()
     
     local logListPadding = Instance.new("UIPadding")
     logListPadding.PaddingTop = UDim.new(0, 3)
-    logListPadding.PaddingLeft = UDim.new(0, 3)   -- ✅ UDim (no UDim2)
-    logListPadding.PaddingRight = UDim.new(0, 3)  -- ✅ UDim (no UDim2)
+    logListPadding.PaddingLeft = UDim.new(0, 3)    -- ✅ UDim
+    logListPadding.PaddingRight = UDim.new(0, 3)   -- ✅ UDim
     logListPadding.Parent = logScroll
     
-    self.GUI.logScroll = logScroll
-    self.GUI.btnClearLog = btnClearLog
+    self.GUI.tabLogScroll = logScroll
+    self.GUI.tabLogBtnClear = btnClearLog
 end
 
 function GUI:createStatusBar()
