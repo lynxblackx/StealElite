@@ -188,8 +188,8 @@ function GUI:createTabs()
     end
     
     self.GUI.tabRobo = createTab("ROBO", "🎯 ROBO", 2)
-    self.GUI.tabMod = createTab("MOD", "️ MOD", 122)
-    self.GUI.tabLog = createTab("LOG", " LOG", 242)
+    self.GUI.tabMod = createTab("MOD", "⚙️ MOD", 122)
+    self.GUI.tabLog = createTab("LOG", "📋 LOG", 242)
 end
 
 function GUI:createTabRobo()
@@ -303,7 +303,7 @@ function GUI:createTabRobo()
     btnPresetAll.Size = UDim2.new(0, 108, 0, 22)
     btnPresetAll.Position = UDim2.new(0, 230, 0, 72)
     btnPresetAll.BackgroundColor3 = self.Config.success
-    btnPresetAll.Text = " ALL IN"
+    btnPresetAll.Text = "🌍 ALL IN"
     btnPresetAll.TextColor3 = Color3.new(0, 0, 0)
     btnPresetAll.TextSize = 8
     btnPresetAll.Font = Enum.Font.GothamBold
@@ -479,7 +479,7 @@ function GUI:createTabRobo()
     
     local switchEsp = self.Utils:createSwitch(s4, UDim2.new(0, 0, 0, s4Offset + 4), "👁️ ESP", true)
     local switchSpeed = self.Utils:createSwitch(s4, UDim2.new(0, 115, 0, s4Offset + 4), "🏃 Speed", true)
-    local switchAfk = self.Utils:createSwitch(s4, UDim2.new(0, 230, 0, s4Offset + 4), "🛡️ AFK", true)
+    local switchAfk = self.Utils:createSwitch(s4, UDim2.new(0, 230, 0, s4Offset + 4), "️ AFK", true)
     local switchTreadmill = self.Utils:createSwitch(s4, UDim2.new(0, 0, 0, s4Offset + 34), "🏃 Treadmill", false)
     
     self.Switches.esp = switchEsp
@@ -604,7 +604,7 @@ function GUI:createStatusBar()
     statsLabel.Size = UDim2.new(0.5, -5, 1, 0)
     statsLabel.Position = UDim2.new(0.5, 0, 0, 0)
     statsLabel.BackgroundTransparency = 1
-    statsLabel.Text = " 0 | 👁️ 0 |  0s"
+    statsLabel.Text = "🥚 0 | 👁️ 0 | 🏃 0s"
     statsLabel.TextColor3 = self.Config.textSecondary
     statsLabel.TextSize = 8
     statsLabel.Font = Enum.Font.GothamBold
