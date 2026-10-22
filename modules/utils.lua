@@ -1,5 +1,5 @@
 -- ============================================
--- UTILIDADES CON SWITCHES CORREGIDOS
+-- UTILIDADES - Switch simplificado
 -- ============================================
 local Utils = {}
 
@@ -52,8 +52,8 @@ function Utils:createPillButton(parent, size, position, text, color, textSize)
     return btn
 end
 
--- ✅ SWITCH CON CALLBACK CORREGIDO
-function Utils:createSwitch(parent, position, text, initialState, callback)
+-- ✅ SWITCH SIN HANDLER INTERNO (solo expone el botón)
+function Utils:createSwitch(parent, position, text, initialState)
     local container = Instance.new("Frame")
     container.Size = UDim2.new(0, 110, 0, 28)
     container.Position = position
@@ -63,7 +63,6 @@ function Utils:createSwitch(parent, position, text, initialState, callback)
     self:createCorner(container, 14)
     self:createStroke(container, self.Config.borderGlow, 1, 0.7)
     
-    -- Track (fondo del switch)
     local track = Instance.new("Frame")
     track.Size = UDim2.new(0, 44, 0, 20)
     track.Position = initialState and UDim2.new(1, -48, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
@@ -72,7 +71,6 @@ function Utils:createSwitch(parent, position, text, initialState, callback)
     track.Parent = container
     self:createCorner(track, 10)
     
-    -- Thumb (bolita del switch)
     local thumb = Instance.new("Frame")
     thumb.Size = UDim2.new(0, 16, 0, 16)
     thumb.Position = initialState and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 6, 0.5, -8)
@@ -81,7 +79,6 @@ function Utils:createSwitch(parent, position, text, initialState, callback)
     thumb.Parent = track
     self:createCorner(thumb, 8)
     
-    -- Label
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, -52, 1, 0)
     label.Position = UDim2.new(0, 8, 0, 0)
@@ -93,40 +90,27 @@ function Utils:createSwitch(parent, position, text, initialState, callback)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = container
     
-    -- Botón invisible para clicks
+    -- ✅ Botón transparente SIN handler propio
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundTransparency = 1
     btn.Text = ""
     btn.Parent = container
     
-    -- Objeto del switch
-    local switchObj = {
+    return {
         container = container,
         track = track,
         thumb = thumb,
         label = label,
         button = btn,
         state = initialState,
-        callback = callback,
         setState = function(self, newState)
-            if self.state == newState then return end -- Evitar cambios duplicados
             self.state = newState
             self.track.Position = newState and UDim2.new(1, -48, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
             self.track.BackgroundColor3 = newState and self.Config.success or self.Config.textMuted
             self.thumb.Position = newState and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 6, 0.5, -8)
-            if self.callback then
-                self.callback(newState)
-            end
         end
     }
-    
-    -- Click handler
-    btn.MouseButton1Click:Connect(function()
-        switchObj:setState(not switchObj.state)
-    end)
-    
-    return switchObj
 end
 
 function Utils:createSection(parent, size, position, title, titleColor)
