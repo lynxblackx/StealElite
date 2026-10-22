@@ -105,7 +105,7 @@ function Core:connectEvents()
         State.afkEnabled = not State.afkEnabled
         self.Switches.afk:setState(State.afkEnabled)
         if State.afkEnabled then State.lastAfk = tick() end
-        self.Utils:log(State.afkEnabled and "️ AFK ON" or "🛡️ AFK OFF")
+        self.Utils:log(State.afkEnabled and "🛡️ AFK ON" or "🛡️ AFK OFF")
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
@@ -115,7 +115,7 @@ function Core:connectEvents()
         if not State.treadmillEnabled and State.onTreadmill then
             self:leaveTreadmill()
         end
-        self.Utils:log(State.treadmillEnabled and "🏃 Treadmill ON" or "🏃 Treadmill OFF")
+        self.Utils:log(State.treadmillEnabled and " Treadmill ON" or "🏃 Treadmill OFF")
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
@@ -178,8 +178,8 @@ function Core:StartLoops(Shared)
         end
     end)
     
-    -- SpawnedEggs events
-    local spawnedEggsFolder = self.Shared.Workspace:FindFirstChild("SpawnedEggs")
+    -- ✅ CORREGIDO: Usar Services.Workspace en lugar de Workspace
+    local spawnedEggsFolder = self.Shared.Services.Workspace:FindFirstChild("SpawnedEggs")
     if spawnedEggsFolder then
         spawnedEggsFolder.ChildAdded:Connect(function()
             task.wait(0.1)
@@ -209,7 +209,8 @@ function Core:updateStats()
 end
 
 function Core:tpToSpawn()
-    local essentials = self.Shared.Workspace:FindFirstChild("Essentials")
+    -- ✅ CORREGIDO: Usar Services.Workspace
+    local essentials = self.Shared.Services.Workspace:FindFirstChild("Essentials")
     if not essentials then return false end
     local tycoons = essentials:FindFirstChild("Tycoons")
     if not tycoons then return false end
@@ -236,7 +237,8 @@ end
 
 -- TREADMILL
 function Core:getTreadmillPart()
-    local essentials = self.Shared.Workspace:FindFirstChild("Essentials")
+    -- ✅ CORREGIDO: Usar Services.Workspace
+    local essentials = self.Shared.Services.Workspace:FindFirstChild("Essentials")
     if not essentials then return nil end
     local tycoons = essentials:FindFirstChild("Tycoons")
     if not tycoons then return nil end
@@ -291,7 +293,7 @@ function Core:tpToTreadmill()
     
     self.State.onTreadmill = true
     self.Utils:log("🏃 TP al Treadmill")
-    self.GUI.statusLabel.Text = "🏃 En Treadmill..."
+    self.GUI.statusLabel.Text = " En Treadmill..."
     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
     return true
 end
@@ -392,7 +394,8 @@ function Core:createEsp(egg, rarity)
     linePart.Color = color
     linePart.Transparency = 0.3
     linePart.Size = Vector3.new(0.1, 0.1, 1)
-    linePart.Parent = self.Shared.Workspace
+    -- ✅ CORREGIDO: Usar Services.Workspace
+    linePart.Parent = self.Shared.Services.Workspace
     esp.line = linePart
     
     self.State.espObjects[egg] = esp
@@ -600,7 +603,7 @@ function Core:createEggEntry(egg, rarity)
     btnSteal.Size = UDim2.new(0, 32, 0, 18)
     btnSteal.Position = UDim2.new(1, -36, 0, 3)
     btnSteal.BackgroundColor3 = self.Config.accentPink
-    btnSteal.Text = "🥷"
+    btnSteal.Text = ""
     btnSteal.TextColor3 = Color3.new(1, 1, 1)
     btnSteal.TextSize = 9
     btnSteal.Font = Enum.Font.GothamBold
@@ -633,7 +636,8 @@ end
 
 -- LIVE SCAN
 function Core:liveScan()
-    local spawnedEggs = self.Shared.Workspace:FindFirstChild("SpawnedEggs")
+    -- ✅ CORREGIDO: Usar Services.Workspace
+    local spawnedEggs = self.Shared.Services.Workspace:FindFirstChild("SpawnedEggs")
     if not spawnedEggs then return end
     
     local newEggs = {}
@@ -741,7 +745,7 @@ function Core:performAfkAction()
             return true, "Inventario"
         end,
         function()
-            local cam = self.Shared.Workspace.CurrentCamera
+            local cam = self.Shared.Services.Workspace.CurrentCamera
             if not cam then return false end
             local orig = cam.CFrame
             pcall(function()
@@ -857,7 +861,7 @@ function Core:mainLoop()
                     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
                 end
             else
-                self.GUI.statusLabel.Text = "⏳ Esperando huevos..."
+                self.GUI.statusLabel.Text = " Esperando huevos..."
                 self.GUI.statusLabel.TextColor3 = self.Config.textSecondary
                 task.wait(2)
             end
