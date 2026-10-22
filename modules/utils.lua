@@ -1,5 +1,5 @@
 -- ============================================
--- FUNCIONES AUXILIARES DE UI
+-- FUNCIONES AUXILIARES DE UI - VERSIÓN MEJORADA
 -- ============================================
 local Utils = {}
 
@@ -67,12 +67,12 @@ function Utils:createSwitch(parent, position, text, initialState)
     self:createStroke(container, self.Config.borderGlow, 1, 0.7)
     
     local indicator = Instance.new("Frame")
-    indicator.Size = UDim2.new(0, 18, 0, 18)
-    indicator.Position = initialState and UDim2.new(1, -22, 0.5, -9) or UDim2.new(0, 4, 0.5, -9)
+    indicator.Size = UDim2.new(0, 40, 0, 20)
+    indicator.Position = initialState and UDim2.new(1, -44, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
     indicator.BackgroundColor3 = initialState and self.Config.success or self.Config.textMuted
     indicator.BorderSizePixel = 0
     indicator.Parent = container
-    self:createCorner(indicator, 9)
+    self:createCorner(indicator, 10)
     
     local label = Instance.new("TextLabel")
     label.Size = UDim2.new(1, -28, 1, 0)
@@ -100,7 +100,7 @@ function Utils:createSwitch(parent, position, text, initialState)
         state = initialState,
         setState = function(self, newState)
             self.state = newState
-            self.indicator.Position = newState and UDim2.new(1, -22, 0.5, -9) or UDim2.new(0, 4, 0.5, -9)
+            self.indicator.Position = newState and UDim2.new(1, -44, 0.5, -10) or UDim2.new(0, 4, 0.5, -10)
             self.indicator.BackgroundColor3 = newState and self.Config.success or self.Config.textMuted
         end
     }
@@ -222,6 +222,21 @@ end
 
 function Utils:passesEspFilter(rarity)
     return self.Shared.State.espFilters[rarity] or false
+end
+
+-- ✅ NUEVAS FUNCIONES DE UTILIDAD
+function Utils:getDistance(pos1, pos2)
+    return (pos1 - pos2).Magnitude
+end
+
+function Utils:isNear(egg, maxDistance)
+    local character = self.Shared.Player.Character
+    if not character then return false end
+    
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+    if not rootPart then return false end
+    
+    return self:getDistance(rootPart.Position, egg.Position) <= maxDistance
 end
 
 return Utils

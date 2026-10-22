@@ -1,5 +1,5 @@
 -- ============================================
--- GUARDADO PERSISTENTE
+-- GUARDADO PERSISTENTE - VERSIÓN MEJORADA
 -- ============================================
 local Settings = {}
 
@@ -17,7 +17,8 @@ function Settings:save()
         afkEnabled = self.Shared.State.afkEnabled,
         espEnabled = self.Shared.State.espEnabled,
         stealFilters = self.Shared.State.stealFilters,
-        espFilters = self.Shared.State.espFilters
+        espFilters = self.Shared.State.espFilters,
+        currentDelay = tonumber(self.Shared.GUI.delayInput.Text) or 0.5
     }
     
     pcall(function()
@@ -33,6 +34,7 @@ function Settings:load()
         if readfile and isfile and isfile(FILE_NAME) then
             local data = game:GetService("HttpService"):JSONDecode(readfile(FILE_NAME))
             
+            -- Cargar toggles
             if data.speedEnabled ~= nil then 
                 self.Shared.State.speedEnabled = data.speedEnabled 
             end
@@ -45,15 +47,24 @@ function Settings:load()
             if data.espEnabled ~= nil then 
                 self.Shared.State.espEnabled = data.espEnabled 
             end
+            
+            -- Cargar filtros de robo (INDEPENDIENTES)
             if data.stealFilters then
                 for rarity, enabled in pairs(data.stealFilters) do
                     self.Shared.State.stealFilters[rarity] = enabled
                 end
             end
+            
+            -- Cargar filtros de ESP (INDEPENDIENTES)
             if data.espFilters then
                 for rarity, enabled in pairs(data.espFilters) do
                     self.Shared.State.espFilters[rarity] = enabled
                 end
+            end
+            
+            -- Cargar delay
+            if data.currentDelay then
+                self.Shared.GUI.delayInput.Text = tostring(data.currentDelay)
             end
             
             self.Shared.Utils:log("⚙️ Configuración cargada")

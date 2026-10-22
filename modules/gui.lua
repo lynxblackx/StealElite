@@ -1,5 +1,5 @@
 -- ============================================
--- CREACIÓN DE GUI - VERSIÓN CORREGIDA
+-- CREACIÓN DE GUI - VERSIÓN MEJORADA
 -- ============================================
 local GUI = {}
 
@@ -17,8 +17,8 @@ function GUI:Build(Shared)
     self:createContent()
     self:createTabs()
     self:createTabRobo()
-    self:createTabMod()    -- ✅ NUEVO: Pestaña MOD con toggles
-    self:createTabLog()    -- ✅ NUEVO: Pestaña LOG
+    self:createTabMod()
+    self:createTabLog()
     self:createStatusBar()
 end
 
@@ -39,6 +39,15 @@ function GUI:createMainFrame()
     mainFrame.Parent = screenGui
     self.Utils:createCorner(mainFrame, 14)
     self.Utils:createStroke(mainFrame, self.Config.accentCyan, 1.5, 0.4)
+    
+    -- Animación de entrada
+    mainFrame.Position = UDim2.new(0.82, 0, 0.5, -self.Config.height/2 - 50)
+    mainFrame.BackgroundTransparency = 1
+    
+    game:GetService("TweenService"):Create(mainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+        Position = UDim2.new(0.82, 0, 0.5, -self.Config.height/2),
+        BackgroundTransparency = 0
+    }):Play()
     
     self.GUI.screenGui = screenGui
     self.GUI.mainFrame = mainFrame
@@ -70,7 +79,7 @@ function GUI:createHeader()
     logoIcon.Size = UDim2.new(0, 32, 0, 32)
     logoIcon.Position = UDim2.new(0, 8, 0, 5)
     logoIcon.BackgroundColor3 = self.Config.bgGlass
-    logoIcon.Text = ""
+    logoIcon.Text = "🥷"
     logoIcon.TextSize = 18
     logoIcon.Font = Enum.Font.GothamBold
     logoIcon.BorderSizePixel = 0
@@ -92,7 +101,7 @@ function GUI:createHeader()
     versionLabel.Size = UDim2.new(0, 50, 0, 14)
     versionLabel.Position = UDim2.new(0, 46, 1, -18)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v15.3 FIX"
+    versionLabel.Text = "v15.4 FIX"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 8
     versionLabel.Font = Enum.Font.GothamBold
@@ -217,7 +226,7 @@ function GUI:createTabRobo()
     btnStop.Size = UDim2.new(0.36, -2, 0, 32)
     btnStop.Position = UDim2.new(0.64, 0, 0, s1Offset)
     btnStop.BackgroundColor3 = self.Config.danger
-    btnStop.Text = "⏸ STOP"
+    btnStop.Text = " STOP"
     btnStop.TextColor3 = Color3.new(1, 1, 1)
     btnStop.TextSize = 10
     btnStop.Font = Enum.Font.GothamBold
@@ -306,14 +315,20 @@ function GUI:createTabRobo()
     self.Utils:createCorner(btnPresetAll, 6)
     btnPresetAll.MouseButton1Click:Connect(function() applyPreset("ALL") end)
     
-    -- Filtros de Robo
+    -- ✅ FILTROS DE ROBO (INDEPENDIENTES)
+    local s2, s2Offset = self.Utils:createSection(tabRobo,
+        UDim2.new(1, 0, 0, 85),
+        UDim2.new(0, 0, 0, 100),
+        "🎯 FILTROS DE ROBO",
+        self.Config.accentGold)
+    
     local stealButtons = {}
     local pillW = 60
     local pillH = 22
     local pillGapX = 4
     local pillGapY = 3
     local pillStartX = 6
-    local pillStartY = 100
+    local pillStartY = s2Offset + 2
     
     for i, rarity in ipairs(self.Shared.Rarities) do
         local row = math.floor((i - 1) / 5)
@@ -387,11 +402,11 @@ function GUI:createTabRobo()
         if self.Shared.Settings then self.Shared.Settings:save() end
     end)
     
-    -- Filtros ESP (en pestaña ROBO también para acceso rápido)
+    -- ✅ FILTROS DE ESP (INDEPENDIENTES DE ROBO)
     local s3, s3Offset = self.Utils:createSection(tabRobo,
         UDim2.new(1, 0, 0, 85),
-        UDim2.new(0, 0, 0, 157),
-        "👁️ FILTROS DE ESP",
+        UDim2.new(0, 0, 0, 190),
+        "️ FILTROS DE ESP",
         self.Config.accentCyan)
     
     local espButtons = {}
@@ -477,13 +492,12 @@ function GUI:createTabRobo()
     self.Buttons.esp = espButtons
 end
 
--- ✅ NUEVA FUNCIÓN: Pestaña MOD con toggles
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
-    -- Toggles
+    -- Toggles con animación
     local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 8), "👁️ ESP Visual", true)
-    local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 40), "🏃 Speed Boost (50)", true)
+    local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 40), " Speed Boost (50)", true)
     local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 72), "🛡️ Anti-AFK", true)
     local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, 104), "🏃 Auto Treadmill", false)
     
@@ -509,7 +523,6 @@ function GUI:createTabMod()
     self.Utils:createStroke(hkInfo, self.Config.accentCyan, 1, 0.5)
 end
 
--- ✅ NUEVA FUNCIÓN: Pestaña LOG
 function GUI:createTabLog()
     local tabLog = self.GUI.tabLog
     
