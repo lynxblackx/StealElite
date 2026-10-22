@@ -1,5 +1,5 @@
 -- ============================================
--- CORE - LÓGICA PRINCIPAL + DETECTOR TREADMILL
+-- CORE v16.2 - TREADMILL FIX + ESP OPTIMIZADO
 -- ============================================
 local Core = {}
 
@@ -13,65 +13,58 @@ function Core:Init(Shared)
     self.Buttons = Shared.Buttons
     
     self.cooldowns = {}
+    self.rarityCache = {} -- ✅ CACHE DE RAREZA (mejora ESP)
+    self.treadmillAttempts = 0
+    
     self:connectEvents()
-    self:checkDetector() -- Verificar si el detector ya corrió
+    self:autoDetectTreadmill() -- ✅ Auto-detect al iniciar
 end
 
-function Core:checkDetector()
-    -- Verifica si _G tiene datos del detector
-    if _G.MyTreadmill and _G.MyTreadmillPos then
-        local plotName = tostring(_G.MyPlot or "Desconocido")
-        self.Utils:log("✅ Treadmill detectado: Plot " .. plotName)
-        if self.GUI.treadmillInfo then
-            self.GUI.treadmillInfo.Text = "🏃 Plot " .. plotName .. " ✅"
-            self.GUI.treadmillInfo.TextColor3 = self.Config.success
-        end
-        return true
-    else
-        self.Utils:log("⚠️ No hay treadmill detectado. Usa el botón Re-detectar")
-        if self.GUI.treadmillInfo then
-            self.GUI.treadmillInfo.Text = "🏃 Treadmill: No detectado ⚠️"
-            self.GUI.treadmillInfo.TextColor3 = self.Config.danger
-        end
-        return false
-    end
-end
-
-function Core:redetectTreadmill()
-    self.Utils:log("🔍 Re-detectando treadmill...")
-    if self.GUI.treadmillInfo then
-        self.GUI.treadmillInfo.Text = " Buscando..."
-        self.GUI.treadmillInfo.TextColor3 = self.Config.accentGold
-    end
+-- ============================================
+-- 🎯 AUTO-DETECT TREADMILL (3 métodos)
+-- ============================================
+function Core:autoDetectTreadmill()
+    self.Utils:log("🔍 Buscando treadmill automáticamente...")
     
     local Workspace = self.Shared.Services.Workspace
     local essentials = Workspace:FindFirstChild("Essentials")
     if not essentials then
-        self.Utils:log("❌ No se encontró Essentials")
+        self.Utils:log("❌ No encontró 'Essentials'")
         return false
     end
     
     local tycoons = essentials:FindFirstChild("Tycoons")
     if not tycoons then
-        self.Utils:log("❌ No se encontró Tycoons")
+        self.Utils:log("❌ No encontró 'Tycoons'")
         return false
     end
     
-    -- Método 1: Buscar por Owner attribute
+    local player = self.Shared.Player
+    local char = player.Character
+    local myPos = char and char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.Position
+    
+    -- MÉTODO 1: Buscar por Owner attribute (más confiable)
     for _, tycoon in ipairs(tycoons:GetChildren()) do
         if tycoon:IsA("Model") or tycoon:IsA("Folder") then
-            local owner = tycoon:GetAttribute("Owner")
-            if owner == self.Shared.Player.Name or owner == tostring(self.Shared.Player.UserId) then
+            -- Probar múltiples nombres de atributo
+            local owner = tycoon:GetAttribute("Owner") 
+                or tycoon:GetAttribute("OwnerUserId")
+                or tycoon:GetAttribute("PlotOwner")
+                or tycoon:GetAttribute("owner")
+            
+            if owner == player.Name or owner == tostring(player.UserId) then
                 local region = tycoon:FindFirstChild("TreadmillRegion")
                 if region then
                     local inv = region:FindFirstChild("inv")
                     if inv then
+                        local pos = inv:IsA("BasePart") and inv.Position or inv:GetPivot().Position
                         _G.MyTreadmill = region
-                        _G.MyTreadmillPos = inv:IsA("BasePart") and inv.Position or inv:GetPivot().Position
+                        _G.MyTreadmillPos = pos
                         _G.MyPlot = tycoon
+                        _G.MyTreadmillInv = inv
                         
-                        self.Utils:log("✅ Re-detectado: " .. tycoon.Name)
-                        self:checkDetector()
+                        self.Utils:log("✅ Treadmill detectado por Owner: " .. tycoon.Name)
+                        self:updateTreadmillUI(true, tycoon.Name, "Owner")
                         return true
                     end
                 end
@@ -79,11 +72,9 @@ function Core:redetectTreadmill()
         end
     end
     
-    -- Método 2: Más cercano al jugador
-    local char = self.Shared.Player.Character
-    if char and char:FindFirstChild("HumanoidRootPart") then
-        local myPos = char.HumanoidRootPart.Position
-        local closest, closestDist = nil, math.huge
+    -- MÉTODO 2: Más cercano al jugador (si tenemos posición)
+    if myPos then
+        local closest, closestDist, closestTycoon = nil, math.huge, nil
         
         for _, tycoon in ipairs(tycoons:GetChildren()) do
             if tycoon:IsA("Model") or tycoon:IsA("Folder") then
@@ -93,311 +84,71 @@ function Core:redetectTreadmill()
                     if inv then
                         local pos = inv:IsA("BasePart") and inv.Position or inv:GetPivot().Position
                         local dist = (myPos - pos).Magnitude
-                        if dist < closestDist then
+                        
+                        if dist < closestDist and dist < 300 then
                             closestDist = dist
-                            closest = {tycoon = tycoon, region = region, inv = inv, pos = pos}
+                            closest = {region = region, pos = pos, inv = inv}
+                            closestTycoon = tycoon
                         end
                     end
                 end
             end
         end
         
-        if closest and closestDist < 200 then
+        if closest then
             _G.MyTreadmill = closest.region
             _G.MyTreadmillPos = closest.pos
-            _G.MyPlot = closest.tycoon
+            _G.MyPlot = closestTycoon
+            _G.MyTreadmillInv = closest.inv
             
-            self.Utils:log("✅ Detectado por distancia: " .. closest.tycoon.Name .. " (" .. string.format("%.0f", closestDist) .. " studs)")
-            self:checkDetector()
+            self.Utils:log("✅ Treadmill detectado por distancia: " .. closestTycoon.Name .. " (" .. string.format("%.0f", closestDist) .. " studs)")
+            self:updateTreadmillUI(true, closestTycoon.Name, "Distancia")
             return true
         end
     end
     
-    self.Utils:log("❌ No se pudo re-detectar")
-    if self.GUI.treadmillInfo then
-        self.GUI.treadmillInfo.Text = " Treadmill: ❌ No encontrado"
-        self.GUI.treadmillInfo.TextColor3 = self.Config.danger
+    -- MÉTODO 3: Usar _G si ya existe de sesión anterior
+    if _G.MyTreadmill and _G.MyTreadmillPos and _G.MyTreadmill.Parent then
+        self.Utils:log("✅ Usando treadmill guardado en _G: " .. tostring(_G.MyPlot))
+        self:updateTreadmillUI(true, tostring(_G.MyPlot), "_G Cache")
+        return true
     end
+    
+    self.Utils:log("❌ No se pudo auto-detectar. Usa el botón 'Re-detectar'")
+    self:updateTreadmillUI(false, "No detectado", "Fallido")
     return false
 end
 
-function Core:connectEvents()
-    local GUI = self.GUI
-    local State = self.State
-    
-    GUI.btnLoop.MouseButton1Click:Connect(function()
-        if not State.loopRunning then
-            GUI.btnLoop.Text = "▶ LOOP ACTIVO"
-            GUI.btnLoop.BackgroundColor3 = self.Config.success
-            task.spawn(function() self:mainLoop() end)
-        end
-    end)
-    
-    GUI.btnStop.MouseButton1Click:Connect(function()
-        State.loopRunning = false
-        GUI.btnLoop.Text = "▶ INICIAR LOOP"
-        GUI.btnLoop.BackgroundColor3 = self.Config.accentPink
-        if State.onTreadmill then self:leaveTreadmill() end
-    end)
-    
-    if GUI.btnClearLog then
-        GUI.btnClearLog.MouseButton1Click:Connect(function()
-            State.robLog = {}
-            for _, child in pairs(GUI.logScroll:GetChildren()) do
-                if child:IsA("Frame") then child:Destroy() end
-            end
-            self.Utils:log("📋 Registro limpiado")
-        end)
-    end
-    
-    -- ✅ Botón Re-detectar (si existe en GUI)
-    if GUI.btnRedetect then
-        GUI.btnRedetect.MouseButton1Click:Connect(function()
-            self:redetectTreadmill()
-        end)
-    end
-    
-    GUI.delayInput:GetPropertyChangedSignal("Text"):Connect(function()
-        local clean = GUI.delayInput.Text:gsub("[^0-9.]", "")
-        if clean ~= GUI.delayInput.Text then GUI.delayInput.Text = clean end
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
-    
-    GUI.nameFilter:GetPropertyChangedSignal("Text"):Connect(function()
-        self:liveScan()
-    end)
-    
-    GUI.btnMin.MouseButton1Click:Connect(function()
-        State.isMinimized = not State.isMinimized
-        GUI.content.Visible = not State.isMinimized
-        GUI.statusBar.Visible = not State.isMinimized
-        if State.isMinimized then
-            GUI.mainFrame.Size = UDim2.new(0, self.Config.width, 0, 38)
-            GUI.btnMin.Text = "+"
+function Core:updateTreadmillUI(success, name, method)
+    if self.GUI.treadmillInfo then
+        if success then
+            self.GUI.treadmillInfo.Text = "🏃 Plot: " .. name .. " ✅"
+            self.GUI.treadmillInfo.TextColor3 = self.Config.success
         else
-            GUI.mainFrame.Size = UDim2.new(0, self.Config.width, 0, self.Config.height)
-            GUI.btnMin.Text = "−"
+            self.GUI.treadmillInfo.Text = "🏃 Treadmill:  No detectado"
+            self.GUI.treadmillInfo.TextColor3 = self.Config.danger
         end
-    end)
-    
-    GUI.btnClose.MouseButton1Click:Connect(function()
-        State.loopRunning = false
-        if State.speedEnabled then
-            local char = self.Shared.Player.Character
-            if char then
-                local hum = char:FindFirstChild("Humanoid")
-                if hum then hum.WalkSpeed = 16 end
-            end
-        end
-        self:clearAllEsp()
-        GUI.screenGui:Destroy()
-    end)
-    
-    -- Switches
-    self.Switches.esp.button.MouseButton1Click:Connect(function()
-        State.espEnabled = not State.espEnabled
-        self.Switches.esp:setState(State.espEnabled)
-        if not State.espEnabled then self:clearAllEsp() end
-        self:updateEspVisibility()
-        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "👁️ ESP OFF")
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
-    
-    self.Switches.speed.button.MouseButton1Click:Connect(function()
-        State.speedEnabled = not State.speedEnabled
-        self.Switches.speed:setState(State.speedEnabled)
-        if not State.speedEnabled then
-            local char = self.Shared.Player.Character
-            if char then
-                local hum = char:FindFirstChild("Humanoid")
-                if hum then hum.WalkSpeed = 16 end
-            end
-        end
-        self.Utils:log(State.speedEnabled and "🏃 Speed ON" or "🏃 Speed OFF")
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
-    
-    self.Switches.afk.button.MouseButton1Click:Connect(function()
-        State.afkEnabled = not State.afkEnabled
-        self.Switches.afk:setState(State.afkEnabled)
-        if State.afkEnabled then State.lastAfk = tick() end
-        self.Utils:log(State.afkEnabled and "🛡️ AFK ON" or "🛡️ AFK OFF")
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
-    
-    self.Switches.treadmill.button.MouseButton1Click:Connect(function()
-        State.treadmillEnabled = not State.treadmillEnabled
-        self.Switches.treadmill:setState(State.treadmillEnabled)
-        if not State.treadmillEnabled and State.onTreadmill then
-            self:leaveTreadmill()
-        end
-        self.Utils:log(State.treadmillEnabled and "🏃 Treadmill ON" or "🏃 Treadmill OFF")
-        if self.Shared.Settings then self.Shared.Settings:save() end
-    end)
-    
-    -- Hotkeys
-    self.Shared.Services.UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe then return end
-        if self.Shared.Services.UserInputService:GetFocusedTextBox() then return end
-        
-        State.lastInput = tick()
-        if State.isAfk then State.isAfk = false end
-        
-        if input.KeyCode == Enum.KeyCode.F1 then
-            if State.loopRunning then GUI.btnStop:Fire() else GUI.btnLoop:Fire() end
-        elseif input.KeyCode == Enum.KeyCode.F2 then
-            self.Switches.treadmill.button:Fire()
-        elseif input.KeyCode == Enum.KeyCode.F3 then
-            self.Switches.esp.button:Fire()
-        elseif input.KeyCode == Enum.KeyCode.F4 then
-            self.Switches.speed.button:Fire()
-        elseif input.KeyCode == Enum.KeyCode.F5 then
-            self.Switches.afk.button:Fire()
-        elseif input.KeyCode == Enum.KeyCode.F6 then
-            self:applyPreset("TOP")
-        elseif input.KeyCode == Enum.KeyCode.F7 then
-            self:applyPreset("LEG")
-        elseif input.KeyCode == Enum.KeyCode.F8 then
-            self:applyPreset("ALL")
-        end
-    end)
-end
-
-function Core:applyPreset(type)
-    for _, r in ipairs(self.Shared.Rarities) do
-        if type == "TOP" then self.State.stealFilters[r.name] = (r.name == "God" or r.name == "Exclusive" or r.name == "OG")
-        elseif type == "LEG" then self.State.stealFilters[r.name] = (r.priority >= 6)
-        elseif type == "ALL" then self.State.stealFilters[r.name] = true end
     end
-    self:updateFilterUI()
-    if self.Shared.Settings then self.Shared.Settings:save() end
-    self.Utils:log("⚡ Preset aplicado: " .. type)
 end
 
-function Core:StartLoops(Shared)
-    -- Speed loop
-    task.spawn(function()
-        while self.GUI.screenGui and self.GUI.screenGui.Parent do
-            if self.State.speedEnabled then
-                local character = self.Shared.Player.Character
-                if character then
-                    local humanoid = character:FindFirstChild("Humanoid")
-                    if humanoid then humanoid.WalkSpeed = self.Config.speedValue end
-                end
-            end
-            task.wait(0.5)
-        end
-    end)
-    
-    -- AFK loop
-    task.spawn(function()
-        while self.GUI.screenGui and self.GUI.screenGui.Parent do
-            if self.State.afkEnabled then
-                local timeIdle = tick() - self.State.lastInput
-                local timeSinceAction = tick() - self.State.lastAfk
-                
-                if timeIdle >= self.Config.afkIdleTime then
-                    if not self.State.isAfk then self.State.isAfk = true end
-                    local randomInterval = math.random(self.Config.afkInterval[1], self.Config.afkInterval[2])
-                    if timeSinceAction >= randomInterval then
-                        self:performAfkAction()
-                    end
-                else
-                    self.State.isAfk = false
-                end
-            end
-            task.wait(1)
-        end
-    end)
-    
-    -- ESP lines loop
-    task.spawn(function()
-        while self.GUI.screenGui and self.GUI.screenGui.Parent do
-            if self.State.espEnabled then self:updateEspLines() end
-            task.wait(0.15)
-        end
-    end)
-    
-    -- Live scan loop
-    task.spawn(function()
-        while self.GUI.screenGui and self.GUI.screenGui.Parent do
-            self:liveScan()
-            task.wait(0.5)
-        end
-    end)
-    
-    -- SpawnedEggs events
-    local Workspace = self.Shared.Services.Workspace
-    local spawnedEggsFolder = Workspace:FindFirstChild("SpawnedEggs")
-    if spawnedEggsFolder then
-        spawnedEggsFolder.ChildAdded:Connect(function()
-            task.wait(0.1)
-            self:liveScan()
-        end)
-        spawnedEggsFolder.ChildRemoved:Connect(function()
-            task.wait(0.1)
-            self:liveScan()
-        end)
+function Core:redetectTreadmill()
+    self.Utils:log("🔄 Re-detectando treadmill...")
+    if self.GUI.treadmillInfo then
+        self.GUI.treadmillInfo.Text = " Buscando..."
+        self.GUI.treadmillInfo.TextColor3 = self.Config.accentGold
     end
     
-    -- Apply initial speed
-    local character = self.Shared.Player.Character
-    if character then
-        local humanoid = character:FindFirstChild("Humanoid")
-        if humanoid then humanoid.WalkSpeed = self.Config.speedValue end
-    end
+    -- Limpiar _G para forzar re-detección
+    _G.MyTreadmill = nil
+    _G.MyTreadmillPos = nil
+    _G.MyPlot = nil
     
-    self.GUI.statusLabel.Text = "✅ Listo - Presiona INICIAR LOOP"
-    self.GUI.statusLabel.TextColor3 = self.Config.success
-    self:updateStats()
-    self:updateFilterUI()
-end
-
-function Core:updateStats()
-    self.GUI.statsLabel.Text = string.format("🥚 %d | 👁️ %d | 🏃 %ds", 
-        self.State.stolenCount, self.State.espCount, math.floor(self.State.treadmillTime))
-end
-
-function Core:tpToSpawn()
-    local Workspace = self.Shared.Services.Workspace
-    local essentials = Workspace:FindFirstChild("Essentials")
-    if not essentials then return false end
-    local tycoons = essentials:FindFirstChild("Tycoons")
-    if not tycoons then return false end
-    local tycoon1 = tycoons:FindFirstChild("1") or tycoons:FindFirstChild(1)
-    if not tycoon1 then return false end
-    local plotArea = tycoon1:FindFirstChild("PlotArea")
-    if not plotArea then return false end
-    
-    local pos = plotArea:IsA("BasePart") and plotArea.Position or plotArea:GetPivot().Position
-    return self.Utils:teleportTo(pos, Vector3.new(0, 3, 0))
-end
-
-function Core:stealEgg(egg)
-    -- Cooldown anti-spam
-    if self.cooldowns[egg] then return false end
-    self.cooldowns[egg] = true
-    task.delay(2, function() self.cooldowns[egg] = nil end)
-    
-    local stealPrompt = egg:FindFirstChild("Steal")
-    if not stealPrompt or not stealPrompt:IsA("ProximityPrompt") then
-        self.Utils:log("⚠️ No Steal prompt en " .. egg.Name)
-        return false
-    end
-    
-    self.Utils:teleportTo(egg.Position, Vector3.new(0, 3, 0))
-    task.wait(0.2)
-    
-    local ok, err = pcall(function()
-        fireproximityprompt(stealPrompt)
-    end)
-    
-    if not ok then self.Utils:log("❌ Error: " .. tostring(err)) end
-    return ok
+    local success = self:autoDetectTreadmill()
+    return success
 end
 
 -- ============================================
--- ✅ TREADMILL CON DETECTOR INTEGRADO
+-- 🏃 FUNCIONES TREADMILL (CORREGIDAS)
 -- ============================================
 function Core:getTreadmillPart()
     -- ✅ PRIMERO: Usar el treadmill detectado
@@ -405,17 +156,25 @@ function Core:getTreadmillPart()
         return _G.MyTreadmill
     end
     
-    -- Fallback: buscar manualmente (estructura original)
+    -- Fallback: buscar manualmente
     local Workspace = self.Shared.Services.Workspace
     local essentials = Workspace:FindFirstChild("Essentials")
     if not essentials then return nil end
     local tycoons = essentials:FindFirstChild("Tycoons")
     if not tycoons then return nil end
-    local tycoon1 = tycoons:FindFirstChild("1") or tycoons:FindFirstChild(1)
-    if not tycoon1 then return nil end
-    local treadmillRegion = tycoon1:FindFirstChild("TreadmillRegion")
-    if not treadmillRegion then return nil end
-    return treadmillRegion:FindFirstChild("inv")
+    
+    -- Buscar en todos los tycoons, no solo el "1"
+    for _, tycoon in ipairs(tycoons:GetChildren()) do
+        if tycoon:IsA("Model") or tycoon:IsA("Folder") then
+            local region = tycoon:FindFirstChild("TreadmillRegion")
+            if region then
+                local inv = region:FindFirstChild("inv")
+                if inv then return inv end
+            end
+        end
+    end
+    
+    return nil
 end
 
 function Core:getTreadmillPosition()
@@ -424,16 +183,12 @@ function Core:getTreadmillPosition()
         return _G.MyTreadmillPos
     end
     
-    -- Fallback: calcular posición
+    -- Fallback
     local inv = self:getTreadmillPart()
     if not inv then return nil end
-    if inv:IsA("BasePart") then
-        return inv.Position
-    else
-        local ok, pivot = pcall(function() return inv:GetPivot().Position end)
-        if ok then return pivot end
-    end
-    return nil
+    if inv:IsA("BasePart") then return inv.Position end
+    local ok, pivot = pcall(function() return inv:GetPivot().Position end)
+    return ok and pivot or nil
 end
 
 function Core:isPlayerOnTreadmill()
@@ -443,21 +198,17 @@ function Core:isPlayerOnTreadmill()
     if not character then return false end
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return false end
-    return (rootPart.Position - treadmillPos).Magnitude < 20
+    return (rootPart.Position - treadmillPos).Magnitude < 25
 end
 
 function Core:tpToTreadmill()
     local treadmillPos = self:getTreadmillPosition()
     if not treadmillPos then 
-        self.Utils:log("❌ Treadmill no encontrado - ejecuta el detector primero")
-        if self.GUI.treadmillInfo then
-            self.GUI.treadmillInfo.Text = "🏃 Treadmill: ❌ No detectado"
-            self.GUI.treadmillInfo.TextColor3 = self.Config.danger
-        end
+        self.Utils:log("❌ Treadmill no encontrado - usa Re-detectar")
+        self:updateTreadmillUI(false, "No detectado", "Error")
         return false 
     end
     
-    self.Utils:log("🏃 TP a posición: " .. string.format("%.1f, %.1f, %.1f", treadmillPos.X, treadmillPos.Y, treadmillPos.Z))
     self.Utils:teleportTo(treadmillPos, Vector3.new(0, 3, 0))
     task.wait(0.5)
     
@@ -482,11 +233,28 @@ function Core:leaveTreadmill()
     if self.State.onTreadmill then
         self.State.onTreadmill = false
         self.State.treadmillTime = 0
-        self.Utils:log("🚪 Saliendo del Treadmill")
+        self.Utils:log(" Saliendo del Treadmill")
     end
 end
 
--- ESP
+-- ============================================
+--  ESP OPTIMIZADO (con caché)
+-- ============================================
+function Core:detectRarityFast(egg)
+    -- ✅ Usar caché para evitar re-detectar
+    if self.rarityCache[egg] then
+        return self.rarityCache[egg]
+    end
+    
+    local rarity = self.Utils:detectRarity(egg)
+    self.rarityCache[egg] = rarity
+    return rarity
+end
+
+function Core:clearRarityCache()
+    self.rarityCache = {}
+end
+
 function Core:removeEsp(egg)
     if self.State.espObjects[egg] then
         local esp = self.State.espObjects[egg]
@@ -495,6 +263,7 @@ function Core:removeEsp(egg)
         if esp.line then esp.line:Destroy() end
         self.State.espObjects[egg] = nil
     end
+    self.rarityCache[egg] = nil -- Limpiar caché también
 end
 
 function Core:createEsp(egg, rarity)
@@ -534,7 +303,7 @@ function Core:createEsp(egg, rarity)
     nameLabel.Size = UDim2.new(1, -8, 0, 14)
     nameLabel.Position = UDim2.new(0, 4, 0, 2)
     nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = " " .. egg.Name
+    nameLabel.Text = "🥚 " .. egg.Name
     nameLabel.TextColor3 = Color3.new(1, 1, 1)
     nameLabel.TextSize = 10
     nameLabel.Font = Enum.Font.GothamBold
@@ -556,7 +325,7 @@ function Core:createEsp(egg, rarity)
     kgLabel.Size = UDim2.new(1, -8, 0, 12)
     kgLabel.Position = UDim2.new(0, 4, 0, 28)
     kgLabel.BackgroundTransparency = 1
-    kgLabel.Text = string.format("⚖️ %.2f kg", weight)
+    kgLabel.Text = string.format("️ %.2f kg", weight)
     kgLabel.TextColor3 = self.Config.accentGold
     kgLabel.TextSize = 8
     kgLabel.Font = Enum.Font.Gotham
@@ -569,7 +338,7 @@ function Core:createEsp(egg, rarity)
     distLabel.Size = UDim2.new(1, -8, 0, 12)
     distLabel.Position = UDim2.new(0, 4, 0, 40)
     distLabel.BackgroundTransparency = 1
-    distLabel.Text = "📍 0 studs"
+    distLabel.Text = " 0 studs"
     distLabel.TextColor3 = self.Config.textSecondary
     distLabel.TextSize = 8
     distLabel.Font = Enum.Font.Gotham
@@ -601,17 +370,18 @@ function Core:updateEspLines()
     local rootPart = character:FindFirstChild("HumanoidRootPart")
     if not rootPart then return end
     
+    local playerPos = rootPart.Position
+    
     for egg, esp in pairs(self.State.espObjects) do
         if esp.line and egg.Parent then
             local eggPos = egg.Position
-            local playerPos = rootPart.Position
             local distance = (eggPos - playerPos).Magnitude
             
             local midpoint = (playerPos + eggPos) / 2
             esp.line.CFrame = CFrame.new(midpoint, eggPos)
             esp.line.Size = Vector3.new(0.08, 0.08, distance)
             
-            -- ✅ Actualizar distancia en billboard
+            -- ✅ Actualizar distancia (solo si existe el label)
             if esp.distLabel then
                 esp.distLabel.Text = string.format("📍 %.1f studs", distance)
             end
@@ -621,8 +391,7 @@ end
 
 function Core:updateEspVisibility()
     for egg, esp in pairs(self.State.espObjects) do
-        local rarity = self.Utils:detectRarity(egg)
-        -- ✅ ESP usa espFilters (INDEPENDIENTE de stealFilters)
+        local rarity = self:detectRarityFast(egg) -- ✅ Usa caché
         local shouldShow = self.State.espEnabled and self.Utils:passesEspFilter(rarity)
         
         if esp.highlight then esp.highlight.Enabled = shouldShow end
@@ -636,9 +405,12 @@ function Core:clearAllEsp()
         self:removeEsp(egg)
     end
     self.State.espCount = 0
+    self.rarityCache = {}
 end
 
--- REGISTRO DE ROBOS
+-- ============================================
+--  REGISTRO DE ROBOS
+-- ============================================
 function Core:addRobLog(eggName, rarity, weight, success)
     local time = os.date("%H:%M:%S")
     local color = self.Utils:getRarityColor(rarity)
@@ -724,7 +496,123 @@ function Core:addRobLog(eggName, rarity, weight, success)
     end
 end
 
--- CREAR ENTRADA EN LISTA
+-- ============================================
+--  LIVE SCAN OPTIMIZADO
+-- ============================================
+function Core:liveScan()
+    local Workspace = self.Shared.Services.Workspace
+    local spawnedEggs = Workspace:FindFirstChild("SpawnedEggs")
+    if not spawnedEggs then return end
+    
+    local newEggs = {}
+    local filterText = self.GUI.nameFilter.Text:lower()
+    
+    for _, egg in ipairs(spawnedEggs:GetChildren()) do
+        if egg:IsA("MeshPart") or egg:IsA("BasePart") then
+            local rarity = self:detectRarityFast(egg) -- ✅ Usa caché
+            table.insert(newEggs, {egg = egg, rarity = rarity, priority = self.Utils:getRarityPriority(rarity)})
+            
+            if not self.State.eggEntries[egg] then
+                self:createEggEntry(egg, rarity)
+            end
+            
+            if self.State.espEnabled and not self.State.espObjects[egg] then
+                self:createEsp(egg, rarity)
+            end
+        end
+    end
+    
+    table.sort(newEggs, function(a, b) return a.priority > b.priority end)
+    
+    for i, eggData in ipairs(newEggs) do
+        local entry = self.State.eggEntries[eggData.egg]
+        if entry then entry.LayoutOrder = i end
+    end
+    
+    for egg, entry in pairs(self.State.eggEntries) do
+        if not egg.Parent then
+            entry:Destroy()
+            self.State.eggEntries[egg] = nil
+            self:removeEsp(egg)
+        else
+            local nameMatch = filterText == "" or egg.Name:lower():find(filterText)
+            entry.Visible = nameMatch
+        end
+    end
+    
+    for egg, esp in pairs(self.State.espObjects) do
+        if not egg.Parent then self:removeEsp(egg) end
+    end
+    
+    self:updateEspVisibility()
+    
+    self.State.eggs = newEggs
+    self:updateStats()
+end
+
+-- ============================================
+-- 🎯 FILTRADO CORREGIDO
+-- ============================================
+function Core:getFilteredEggs()
+    local filterText = self.GUI.nameFilter.Text:lower()
+    local filtered = {}
+    
+    for _, eggData in ipairs(self.State.eggs) do
+        local egg = eggData.egg
+        local rarity = eggData.rarity
+        
+        local nameMatch = filterText == "" or egg.Name:lower():find(filterText)
+        local rarityMatch = self.State.stealFilters[rarity] or false
+        
+        if nameMatch and rarityMatch then
+            table.insert(filtered, eggData)
+        end
+    end
+    
+    return filtered
+end
+
+-- ============================================
+-- 🥷 ROBO
+-- ============================================
+function Core:stealEgg(egg)
+    if self.cooldowns[egg] then return false end
+    self.cooldowns[egg] = true
+    task.delay(2, function() self.cooldowns[egg] = nil end)
+    
+    local stealPrompt = egg:FindFirstChild("Steal")
+    if not stealPrompt or not stealPrompt:IsA("ProximityPrompt") then
+        return false
+    end
+    
+    self.Utils:teleportTo(egg.Position, Vector3.new(0, 3, 0))
+    task.wait(0.2)
+    
+    local ok = pcall(function()
+        fireproximityprompt(stealPrompt)
+    end)
+    
+    return ok
+end
+
+function Core:tpToSpawn()
+    local Workspace = self.Shared.Services.Workspace
+    local essentials = Workspace:FindFirstChild("Essentials")
+    if not essentials then return false end
+    local tycoons = essentials:FindFirstChild("Tycoons")
+    if not tycoons then return false end
+    
+    -- ✅ Usar el plot detectado si existe
+    local targetTycoon = _G.MyPlot or tycoons:FindFirstChild("1") or tycoons:FindFirstChild(1)
+    if not targetTycoon then return false end
+    
+    local plotArea = targetTycoon:FindFirstChild("PlotArea") or targetTycoon:FindFirstChild("Base")
+    if not plotArea then return false end
+    
+    local pos = plotArea:IsA("BasePart") and plotArea.Position or plotArea:GetPivot().Position
+    return self.Utils:teleportTo(pos, Vector3.new(0, 3, 0))
+end
+
 function Core:createEggEntry(egg, rarity)
     if self.State.eggEntries[egg] then return end
     
@@ -788,76 +676,247 @@ function Core:createEggEntry(egg, rarity)
     self.State.eggEntries[egg] = entry
 end
 
--- LIVE SCAN
-function Core:liveScan()
-    local Workspace = self.Shared.Services.Workspace
-    local spawnedEggs = Workspace:FindFirstChild("SpawnedEggs")
-    if not spawnedEggs then return end
+-- ============================================
+--  EVENTOS
+-- ============================================
+function Core:connectEvents()
+    local GUI = self.GUI
+    local State = self.State
     
-    local newEggs = {}
-    local filterText = self.GUI.nameFilter.Text:lower()
-    
-    for _, egg in ipairs(spawnedEggs:GetChildren()) do
-        if egg:IsA("MeshPart") or egg:IsA("BasePart") then
-            local rarity = self.Utils:detectRarity(egg)
-            table.insert(newEggs, {egg = egg, rarity = rarity, priority = self.Utils:getRarityPriority(rarity)})
-            
-            if not self.State.eggEntries[egg] then
-                self:createEggEntry(egg, rarity)
-            end
-            
-            if self.State.espEnabled and not self.State.espObjects[egg] then
-                self:createEsp(egg, rarity)
-            end
+    GUI.btnLoop.MouseButton1Click:Connect(function()
+        if not State.loopRunning then
+            GUI.btnLoop.Text = "▶ LOOP ACTIVO"
+            GUI.btnLoop.BackgroundColor3 = self.Config.success
+            task.spawn(function() self:mainLoop() end)
         end
+    end)
+    
+    GUI.btnStop.MouseButton1Click:Connect(function()
+        State.loopRunning = false
+        GUI.btnLoop.Text = "▶ INICIAR LOOP"
+        GUI.btnLoop.BackgroundColor3 = self.Config.accentPink
+        if State.onTreadmill then self:leaveTreadmill() end
+    end)
+    
+    if GUI.btnClearLog then
+        GUI.btnClearLog.MouseButton1Click:Connect(function()
+            State.robLog = {}
+            for _, child in pairs(GUI.logScroll:GetChildren()) do
+                if child:IsA("Frame") then child:Destroy() end
+            end
+            self.Utils:log("📋 Registro limpiado")
+        end)
     end
     
-    table.sort(newEggs, function(a, b) return a.priority > b.priority end)
-    
-    for i, eggData in ipairs(newEggs) do
-        local entry = self.State.eggEntries[eggData.egg]
-        if entry then entry.LayoutOrder = i end
+    -- ✅ Botón Re-detectar
+    if GUI.btnRedetect then
+        GUI.btnRedetect.MouseButton1Click:Connect(function()
+            self:redetectTreadmill()
+        end)
     end
     
-    for egg, entry in pairs(self.State.eggEntries) do
-        if not egg.Parent then
-            entry:Destroy()
-            self.State.eggEntries[egg] = nil
-            self:removeEsp(egg)
+    GUI.delayInput:GetPropertyChangedSignal("Text"):Connect(function()
+        local clean = GUI.delayInput.Text:gsub("[^0-9.]", "")
+        if clean ~= GUI.delayInput.Text then GUI.delayInput.Text = clean end
+        if self.Shared.Settings then self.Shared.Settings:save() end
+    end)
+    
+    GUI.nameFilter:GetPropertyChangedSignal("Text"):Connect(function()
+        self:liveScan()
+    end)
+    
+    GUI.btnMin.MouseButton1Click:Connect(function()
+        State.isMinimized = not State.isMinimized
+        GUI.content.Visible = not State.isMinimized
+        GUI.statusBar.Visible = not State.isMinimized
+        if State.isMinimized then
+            GUI.mainFrame.Size = UDim2.new(0, self.Config.width, 0, 38)
+            GUI.btnMin.Text = "+"
         else
-            local nameMatch = filterText == "" or egg.Name:lower():find(filterText)
-            entry.Visible = nameMatch
+            GUI.mainFrame.Size = UDim2.new(0, self.Config.width, 0, self.Config.height)
+            GUI.btnMin.Text = "−"
         end
-    end
+    end)
     
-    for egg, esp in pairs(self.State.espObjects) do
-        if not egg.Parent then self:removeEsp(egg) end
-    end
+    GUI.btnClose.MouseButton1Click:Connect(function()
+        State.loopRunning = false
+        if State.speedEnabled then
+            local char = self.Shared.Player.Character
+            if char then
+                local hum = char:FindFirstChild("Humanoid")
+                if hum then hum.WalkSpeed = 16 end
+            end
+        end
+        self:clearAllEsp()
+        GUI.screenGui:Destroy()
+    end)
     
-    self:updateEspVisibility()
+    -- Switches
+    self.Switches.esp.button.MouseButton1Click:Connect(function()
+        State.espEnabled = not State.espEnabled
+        self.Switches.esp:setState(State.espEnabled)
+        if not State.espEnabled then self:clearAllEsp() end
+        self:updateEspVisibility()
+        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "👁️ ESP OFF")
+        if self.Shared.Settings then self.Shared.Settings:save() end
+    end)
     
-    self.State.eggs = newEggs
-    self:updateStats()
+    self.Switches.speed.button.MouseButton1Click:Connect(function()
+        State.speedEnabled = not State.speedEnabled
+        self.Switches.speed:setState(State.speedEnabled)
+        if not State.speedEnabled then
+            local char = self.Shared.Player.Character
+            if char then
+                local hum = char:FindFirstChild("Humanoid")
+                if hum then hum.WalkSpeed = 16 end
+            end
+        end
+        self.Utils:log(State.speedEnabled and "🏃 Speed ON" or "🏃 Speed OFF")
+        if self.Shared.Settings then self.Shared.Settings:save() end
+    end)
+    
+    self.Switches.afk.button.MouseButton1Click:Connect(function()
+        State.afkEnabled = not State.afkEnabled
+        self.Switches.afk:setState(State.afkEnabled)
+        if State.afkEnabled then State.lastAfk = tick() end
+        self.Utils:log(State.afkEnabled and "️ AFK ON" or "🛡️ AFK OFF")
+        if self.Shared.Settings then self.Shared.Settings:save() end
+    end)
+    
+    self.Switches.treadmill.button.MouseButton1Click:Connect(function()
+        State.treadmillEnabled = not State.treadmillEnabled
+        self.Switches.treadmill:setState(State.treadmillEnabled)
+        if not State.treadmillEnabled and State.onTreadmill then
+            self:leaveTreadmill()
+        end
+        self.Utils:log(State.treadmillEnabled and "🏃 Treadmill ON" or "🏃 Treadmill OFF")
+        if self.Shared.Settings then self.Shared.Settings:save() end
+    end)
+    
+    -- Hotkeys
+    self.Shared.Services.UserInputService.InputBegan:Connect(function(input, gpe)
+        if gpe then return end
+        if self.Shared.Services.UserInputService:GetFocusedTextBox() then return end
+        
+        State.lastInput = tick()
+        if State.isAfk then State.isAfk = false end
+        
+        if input.KeyCode == Enum.KeyCode.F1 then
+            if State.loopRunning then GUI.btnStop:Fire() else GUI.btnLoop:Fire() end
+        elseif input.KeyCode == Enum.KeyCode.F2 then
+            self.Switches.treadmill.button:Fire()
+        elseif input.KeyCode == Enum.KeyCode.F3 then
+            self.Switches.esp.button:Fire()
+        elseif input.KeyCode == Enum.KeyCode.F4 then
+            self.Switches.speed.button:Fire()
+        elseif input.KeyCode == Enum.KeyCode.F5 then
+            self.Switches.afk.button:Fire()
+        elseif input.KeyCode == Enum.KeyCode.F6 then
+            self:applyPreset("TOP")
+        elseif input.KeyCode == Enum.KeyCode.F7 then
+            self:applyPreset("LEG")
+        elseif input.KeyCode == Enum.KeyCode.F8 then
+            self:applyPreset("ALL")
+        end
+    end)
 end
 
--- ✅ FILTRADO CORREGIDO - Usa SOLO stealFilters
-function Core:getFilteredEggs()
-    local filterText = self.GUI.nameFilter.Text:lower()
-    local filtered = {}
-    
-    for _, eggData in ipairs(self.State.eggs) do
-        local egg = eggData.egg
-        local rarity = eggData.rarity
-        
-        local nameMatch = filterText == "" or egg.Name:lower():find(filterText)
-        local rarityMatch = self.State.stealFilters[rarity] or false  -- ✅ Solo filtros de robo
-        
-        if nameMatch and rarityMatch then
-            table.insert(filtered, eggData)
+function Core:applyPreset(type)
+    for _, r in ipairs(self.Shared.Rarities) do
+        if type == "TOP" then self.State.stealFilters[r.name] = (r.name == "God" or r.name == "Exclusive" or r.name == "OG")
+        elseif type == "LEG" then self.State.stealFilters[r.name] = (r.priority >= 6)
+        elseif type == "ALL" then self.State.stealFilters[r.name] = true end
+    end
+    self:updateFilterUI()
+    if self.Shared.Settings then self.Shared.Settings:save() end
+    self.Utils:log("⚡ Preset aplicado: " .. type)
+end
+
+-- ============================================
+-- 🔄 LOOPS
+-- ============================================
+function Core:StartLoops(Shared)
+    -- Speed loop
+    task.spawn(function()
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
+            if self.State.speedEnabled then
+                local character = self.Shared.Player.Character
+                if character then
+                    local humanoid = character:FindFirstChild("Humanoid")
+                    if humanoid then humanoid.WalkSpeed = self.Config.speedValue end
+                end
+            end
+            task.wait(0.5)
         end
+    end)
+    
+    -- AFK loop
+    task.spawn(function()
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
+            if self.State.afkEnabled then
+                local timeIdle = tick() - self.State.lastInput
+                local timeSinceAction = tick() - self.State.lastAfk
+                
+                if timeIdle >= self.Config.afkIdleTime then
+                    if not self.State.isAfk then self.State.isAfk = true end
+                    local randomInterval = math.random(self.Config.afkInterval[1], self.Config.afkInterval[2])
+                    if timeSinceAction >= randomInterval then
+                        self:performAfkAction()
+                    end
+                else
+                    self.State.isAfk = false
+                end
+            end
+            task.wait(1)
+        end
+    end)
+    
+    -- ✅ ESP lines loop - OPTIMIZADO (0.2s en vez de 0.1s)
+    task.spawn(function()
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
+            if self.State.espEnabled then self:updateEspLines() end
+            task.wait(0.2) -- ✅ Reducido de 0.1 a 0.2
+        end
+    end)
+    
+    -- Live scan loop - OPTIMIZADO (0.8s en vez de 0.5s)
+    task.spawn(function()
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
+            self:liveScan()
+            task.wait(0.8) -- ✅ Reducido de 0.5 a 0.8
+        end
+    end)
+    
+    -- SpawnedEggs events
+    local Workspace = self.Shared.Services.Workspace
+    local spawnedEggsFolder = Workspace:FindFirstChild("SpawnedEggs")
+    if spawnedEggsFolder then
+        spawnedEggsFolder.ChildAdded:Connect(function()
+            task.wait(0.2)
+            self:liveScan()
+        end)
+        spawnedEggsFolder.ChildRemoved:Connect(function()
+            task.wait(0.2)
+            self:liveScan()
+        end)
     end
     
-    return filtered
+    -- Apply initial speed
+    local character = self.Shared.Player.Character
+    if character then
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then humanoid.WalkSpeed = self.Config.speedValue end
+    end
+    
+    self.GUI.statusLabel.Text = "✅ Listo - Presiona INICIAR LOOP"
+    self.GUI.statusLabel.TextColor3 = self.Config.success
+    self:updateStats()
+    self:updateFilterUI()
+end
+
+function Core:updateStats()
+    self.GUI.statsLabel.Text = string.format("🥚 %d | 👁️ %d | 🏃 %ds", 
+        self.State.stolenCount, self.State.espCount, math.floor(self.State.treadmillTime))
 end
 
 function Core:updateFilterUI()
@@ -874,7 +933,9 @@ function Core:updateFilterUI()
     end
 end
 
--- ANTI-AFK
+-- ============================================
+-- 🛡️ ANTI-AFK
+-- ============================================
 function Core:performAfkAction()
     local methods = {
         function() 
@@ -887,7 +948,7 @@ function Core:performAfkAction()
                 task.wait(0.08)
                 self.Shared.Services.UserInputService:SimulateInputRelease(keys[self.State.currentSlot])
             end)
-            return true, "Slot"
+            return true
         end,
         function()
             pcall(function()
@@ -895,7 +956,7 @@ function Core:performAfkAction()
                 task.wait(0.15)
                 self.Shared.Services.UserInputService:SimulateInputRelease(Enum.KeyCode.B)
             end)
-            return true, "Inventario"
+            return true
         end,
         function()
             local cam = self.Shared.Services.Workspace.CurrentCamera
@@ -908,7 +969,7 @@ function Core:performAfkAction()
                 end
                 cam.CFrame = orig
             end)
-            return true, "Cámara"
+            return true
         end,
         function()
             local char = self.Shared.Player.Character
@@ -916,12 +977,12 @@ function Core:performAfkAction()
             local hum = char:FindFirstChild("Humanoid")
             if not hum then return false end
             pcall(function() hum:ChangeState(Enum.HumanoidStateType.Jumping) end)
-            return true, "Salto"
+            return true
         end,
     }
     
     local method = methods[math.random(1, #methods)]
-    local success, name = method()
+    local success = method()
     if success then
         self.State.afkCount = self.State.afkCount + 1
         self.State.lastAfk = tick()
@@ -930,7 +991,9 @@ function Core:performAfkAction()
     return success
 end
 
--- LOOP PRINCIPAL
+-- ============================================
+-- 🔄 LOOP PRINCIPAL
+-- ============================================
 function Core:mainLoop()
     self.State.loopRunning = true
     self.Utils:log("🔄 LOOP INICIADO")
@@ -943,12 +1006,10 @@ function Core:mainLoop()
         self:liveScan()
         local filteredEggs = self:getFilteredEggs()
         
-        self.Utils:log("📊 Huevos totales: " .. #self.State.eggs .. " | Filtrados: " .. #filteredEggs)
-        
         if #filteredEggs > 0 then
             if self.State.onTreadmill then self:leaveTreadmill() end
             
-            self.GUI.statusLabel.Text = string.format("🎯 %d huevos para robar", #filteredEggs)
+            self.GUI.statusLabel.Text = string.format(" %d huevos para robar", #filteredEggs)
             self.GUI.statusLabel.TextColor3 = self.Config.accentGold
             
             for i, eggData in ipairs(filteredEggs) do
@@ -968,7 +1029,6 @@ function Core:mainLoop()
                     egg.Name, rarity, weight, i, #filteredEggs)
                 self.GUI.statusLabel.TextColor3 = self.Config.accentPink
                 
-                self.Utils:log("🥷 Robando: " .. egg.Name .. " [" .. rarity .. "]")
                 local success = self:stealEgg(egg)
                 
                 if success then
@@ -989,7 +1049,6 @@ function Core:mainLoop()
         else
             if self.State.treadmillEnabled then
                 if not self.State.onTreadmill then
-                    self.Utils:log("🏃 Yendo al treadmill")
                     self:tpToTreadmill()
                 end
                 
@@ -1002,7 +1061,6 @@ function Core:mainLoop()
                     local newFiltered = self:getFilteredEggs()
                     
                     if #newFiltered > 0 then
-                        self.Utils:log("🎯 Aparecieron " .. #newFiltered .. " huevos")
                         self:leaveTreadmill()
                         break
                     end

@@ -1,5 +1,5 @@
 -- ============================================
--- GUI - CON DETECTOR INTEGRADO
+-- GUI v16.2 - CON DETECTOR INTEGRADO
 -- ============================================
 local GUI = {}
 
@@ -92,7 +92,7 @@ function GUI:createHeader()
     versionLabel.Size = UDim2.new(0, 70, 0, 12)
     versionLabel.Position = UDim2.new(0, 36, 1, -16)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v16 DETECTOR"
+    versionLabel.Text = "v16.2 FIX"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 7
     versionLabel.Font = Enum.Font.GothamBold
@@ -217,7 +217,7 @@ function GUI:createTabRobo()
     btnStop.Size = UDim2.new(0.36, -2, 0, 30)
     btnStop.Position = UDim2.new(0.64, 0, 0, s1Offset)
     btnStop.BackgroundColor3 = self.Config.danger
-    btnStop.Text = " STOP"
+    btnStop.Text = "⏸ STOP"
     btnStop.TextColor3 = Color3.new(1, 1, 1)
     btnStop.TextSize = 10
     btnStop.Font = Enum.Font.GothamBold
@@ -297,7 +297,7 @@ function GUI:createTabRobo()
     btnPresetAll.Size = UDim2.new(0, 108, 0, 20)
     btnPresetAll.Position = UDim2.new(0, 230, 0, 70)
     btnPresetAll.BackgroundColor3 = self.Config.success
-    btnPresetAll.Text = " ALL IN"
+    btnPresetAll.Text = "🌍 ALL IN"
     btnPresetAll.TextColor3 = Color3.new(0, 0, 0)
     btnPresetAll.TextSize = 8
     btnPresetAll.Font = Enum.Font.GothamBold
@@ -383,7 +383,7 @@ function GUI:createTabRobo()
         for _, item in ipairs(stealButtons) do
             self.State.stealFilters[item.rarity.name] = false
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "✗" .. item.rarity.short
+            item.button.Text = "" .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
         if self.Shared.Settings then self.Shared.Settings:save() end
@@ -494,12 +494,12 @@ function GUI:createTabMod()
     self.Switches.afk = switchAfk
     self.Switches.treadmill = switchTreadmill
     
-    -- ✅ Indicador de Treadmill detectado
+    -- ✅ Indicador de Treadmill
     local treadmillInfo = Instance.new("TextLabel")
     treadmillInfo.Size = UDim2.new(1, -10, 0, 14)
     treadmillInfo.Position = UDim2.new(0, 5, 0, 136)
     treadmillInfo.BackgroundTransparency = 1
-    treadmillInfo.Text = "🏃 Treadmill: Detectando..."
+    treadmillInfo.Text = "🏃 Treadmill: Buscando..."
     treadmillInfo.TextColor3 = self.Config.textMuted
     treadmillInfo.TextSize = 8
     treadmillInfo.Font = Enum.Font.GothamBold
@@ -548,7 +548,7 @@ function GUI:createTabLog()
     btnClearLog.Size = UDim2.new(0, 60, 0, 20)
     btnClearLog.Position = UDim2.new(1, -65, 0, 5)
     btnClearLog.BackgroundColor3 = self.Config.bgGlass
-    btnClearLog.Text = "🗑️ Limpiar"
+    btnClearLog.Text = "️ Limpiar"
     btnClearLog.TextColor3 = self.Config.textSecondary
     btnClearLog.TextSize = 8
     btnClearLog.Font = Enum.Font.GothamBold
@@ -613,7 +613,7 @@ function GUI:createStatusBar()
     statsLabel.Size = UDim2.new(0.5, -5, 1, 0)
     statsLabel.Position = UDim2.new(0.5, 0, 0, 0)
     statsLabel.BackgroundTransparency = 1
-    statsLabel.Text = "🥚 0 | 👁️ 0 | 🏃 0s"
+    statsLabel.Text = " 0 | 👁️ 0 |  0s"
     statsLabel.TextColor3 = self.Config.textSecondary
     statsLabel.TextSize = 8
     statsLabel.Font = Enum.Font.GothamBold
