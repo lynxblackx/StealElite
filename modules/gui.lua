@@ -67,7 +67,7 @@ function GUI:createHeader()
     logoIcon.Size = UDim2.new(0, 26, 0, 26)
     logoIcon.Position = UDim2.new(0, 6, 0, 6)
     logoIcon.BackgroundColor3 = self.Config.bgGlass
-    logoIcon.Text = "🥷"
+    logoIcon.Text = ""
     logoIcon.TextSize = 14
     logoIcon.Font = Enum.Font.GothamBold
     logoIcon.BorderSizePixel = 0
@@ -89,7 +89,7 @@ function GUI:createHeader()
     versionLabel.Size = UDim2.new(0, 70, 0, 12)
     versionLabel.Position = UDim2.new(0, 36, 1, -16)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v18 FULL"
+    versionLabel.Text = "v18.3 LOG"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 7
     versionLabel.Font = Enum.Font.GothamBold
@@ -284,7 +284,7 @@ function GUI:createTabRobo()
     btnPresetAll.Size = UDim2.new(0, 108, 0, 20)
     btnPresetAll.Position = UDim2.new(0, 230, 0, 70)
     btnPresetAll.BackgroundColor3 = self.Config.success
-    btnPresetAll.Text = "🌍 ALL IN"
+    btnPresetAll.Text = " ALL IN"
     btnPresetAll.TextColor3 = Color3.new(0, 0, 0)
     btnPresetAll.TextSize = 8
     btnPresetAll.Font = Enum.Font.GothamBold
@@ -405,7 +405,7 @@ function GUI:createTabRobo()
     btnNoneEsp.Size = UDim2.new(0, 55, 0, 16)
     btnNoneEsp.Position = UDim2.new(0, 64, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
     btnNoneEsp.BackgroundColor3 = self.Config.danger
-    btnNoneEsp.Text = "✗ NING"
+    btnNoneEsp.Text = " NING"
     btnNoneEsp.TextColor3 = Color3.new(1, 1, 1)
     btnNoneEsp.TextSize = 7
     btnNoneEsp.Font = Enum.Font.GothamBold
@@ -430,31 +430,41 @@ function GUI:createTabRobo()
     self.Buttons.esp = espButtons
 end
 
+-- ✅ PESTAÑA MOD CORREGIDA - Switches dentro de sus secciones
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
+    -- ============================================
+    -- SECCIÓN 1: MÓDULOS BÁSICOS
+    -- ============================================
     local s1, s1Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 100), UDim2.new(0, 0, 0, 0),
-        "️ MÓDULOS BÁSICOS", self.Config.accentCyan)
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 0),
+        "⚙️ MÓDULOS BÁSICOS", self.Config.accentCyan)
     
-    local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s1Offset + 4), "👁️ ESP Visual", true)
-    local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s1Offset + 4), "🏃 Speed", true)
-    local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 225, 0, s1Offset + 4), "️ AFK", true)
+    -- ✅ Switches como hijos de s1
+    local switchEsp = self.Utils:createSwitch(s1, UDim2.new(0, 5, 0, s1Offset + 4), "👁️ ESP Visual", true)
+    local switchSpeed = self.Utils:createSwitch(s1, UDim2.new(0, 115, 0, s1Offset + 4), "🏃 Speed", true)
+    local switchAfk = self.Utils:createSwitch(s1, UDim2.new(0, 225, 0, s1Offset + 4), "🛡️ AFK", true)
     
     self.Switches.esp = switchEsp
     self.Switches.speed = switchSpeed
     self.Switches.afk = switchAfk
     
+    -- ============================================
+    -- SECCIÓN 2: TREADMILL
+    -- ============================================
     local s2, s2Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 100), UDim2.new(0, 0, 0, 105),
+        UDim2.new(1, 0, 0, 100), UDim2.new(0, 0, 0, 75),
         "🏃 TREADMILL", self.Config.accentGold)
     
-    local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s2Offset + 4), "🏃 Auto Treadmill", false)
-    local switchBoost = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s2Offset + 4), "⚡ Auto Boost", true)
+    -- ✅ Switches como hijos de s2
+    local switchTreadmill = self.Utils:createSwitch(s2, UDim2.new(0, 5, 0, s2Offset + 4), "🏃 Auto Treadmill", false)
+    local switchBoost = self.Utils:createSwitch(s2, UDim2.new(0, 115, 0, s2Offset + 4), " Auto Boost", true)
     
     self.Switches.treadmill = switchTreadmill
     self.Switches.boost = switchBoost
     
+    -- Indicador de Treadmill (hijo de s2)
     local treadmillInfo = Instance.new("TextLabel")
     treadmillInfo.Size = UDim2.new(1, -10, 0, 14)
     treadmillInfo.Position = UDim2.new(0, 5, 0, s2Offset + 36)
@@ -464,8 +474,9 @@ function GUI:createTabMod()
     treadmillInfo.TextSize = 8
     treadmillInfo.Font = Enum.Font.GothamBold
     treadmillInfo.TextXAlignment = Enum.TextXAlignment.Left
-    treadmillInfo.Parent = tabMod
+    treadmillInfo.Parent = s2  -- ✅ Hijo de s2
     
+    -- Botón Re-detectar (hijo de s2)
     local btnRedetect = Instance.new("TextButton")
     btnRedetect.Size = UDim2.new(1, -10, 0, 18)
     btnRedetect.Position = UDim2.new(0, 5, 0, s2Offset + 52)
@@ -475,45 +486,60 @@ function GUI:createTabMod()
     btnRedetect.TextSize = 8
     btnRedetect.Font = Enum.Font.GothamBold
     btnRedetect.BorderSizePixel = 0
-    btnRedetect.Parent = tabMod
+    btnRedetect.Parent = s2  -- ✅ Hijo de s2
     self.Utils:createCorner(btnRedetect, 5)
     
     self.GUI.treadmillInfo = treadmillInfo
     self.GUI.btnRedetect = btnRedetect
     
+    -- ============================================
+    -- SECCIÓN 3: HUEVOS
+    -- ============================================
     local s3, s3Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 210),
-        "🥚 HUEVOS", self.Config.accentPink)
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 180),
+        " HUEVOS", self.Config.accentPink)
     
-    local switchPlaceEgg = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s3Offset + 4), "📍 Auto Place", false)
-    local switchOpenEgg = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s3Offset + 4), "🔓 Auto Open", false)
+    -- ✅ Switches como hijos de s3
+    local switchPlaceEgg = self.Utils:createSwitch(s3, UDim2.new(0, 5, 0, s3Offset + 4), "📍 Auto Place", false)
+    local switchOpenEgg = self.Utils:createSwitch(s3, UDim2.new(0, 115, 0, s3Offset + 4), " Auto Open", false)
     
     self.Switches.placeEgg = switchPlaceEgg
     self.Switches.openEgg = switchOpenEgg
     
+    -- ============================================
+    -- SECCIÓN 4: ANIMALES
+    -- ============================================
     local s4, s4Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 285),
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 255),
         "🐾 ANIMALES", self.Config.success)
     
-    local switchSell = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s4Offset + 4), "💰 Auto Sell", false)
-    local switchEquip = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s4Offset + 4), "⭐ Equip Best", false)
+    -- ✅ Switches como hijos de s4
+    local switchSell = self.Utils:createSwitch(s4, UDim2.new(0, 5, 0, s4Offset + 4), "💰 Auto Sell", false)
+    local switchEquip = self.Utils:createSwitch(s4, UDim2.new(0, 115, 0, s4Offset + 4), "⭐ Equip Best", false)
     
     self.Switches.sell = switchSell
     self.Switches.equip = switchEquip
     
+    -- ============================================
+    -- SECCIÓN 5: AVANZADO
+    -- ============================================
     local s5, s5Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 360),
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 330),
         "🔄 AVANZADO", self.Config.danger)
     
-    local switchRebirth = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s5Offset + 4), "🔄 Auto Rebirth", false)
-    local switchOffline = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s5Offset + 4), "🎁 Offline Reward", false)
+    -- ✅ Switches como hijos de s5
+    local switchRebirth = self.Utils:createSwitch(s5, UDim2.new(0, 5, 0, s5Offset + 4), "🔄 Auto Rebirth", false)
+    local switchOffline = self.Utils:createSwitch(s5, UDim2.new(0, 115, 0, s5Offset + 4), "🎁 Offline Reward", false)
     
     self.Switches.rebirth = switchRebirth
     self.Switches.offline = switchOffline
     
+    -- ============================================
+    -- INFO DE ATAJOS (fuera de secciones)
+    -- ============================================
     local hkInfo = Instance.new("TextLabel")
     hkInfo.Size = UDim2.new(1, -10, 0, 60)
-    hkInfo.Position = UDim2.new(0, 5, 0, 435)
+    hkInfo.Position = UDim2.new(0, 5, 0, 405)
     hkInfo.BackgroundColor3 = self.Config.bgGlass
     hkInfo.BorderSizePixel = 0
     hkInfo.Text = "⌨️ ATAJOS:\nF1:Loop F2:Tread F3:ESP\nF4:Speed F5:AFK\nF6:TOP F7:LEG F8:ALL"
@@ -527,6 +553,7 @@ function GUI:createTabMod()
     self.Utils:createStroke(hkInfo, self.Config.accentCyan, 1, 0.5)
 end
 
+-- ✅ PESTAÑA LOG
 function GUI:createTabLog()
     local tabLog = self.GUI.tabLog
     
@@ -534,7 +561,7 @@ function GUI:createTabLog()
     btnClearLog.Size = UDim2.new(0, 60, 0, 20)
     btnClearLog.Position = UDim2.new(1, -65, 0, 5)
     btnClearLog.BackgroundColor3 = self.Config.bgGlass
-    btnClearLog.Text = "🗑️ Limpiar"
+    btnClearLog.Text = "️ Limpiar"
     btnClearLog.TextColor3 = self.Config.textSecondary
     btnClearLog.TextSize = 8
     btnClearLog.Font = Enum.Font.GothamBold
