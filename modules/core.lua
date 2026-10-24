@@ -13,7 +13,7 @@ function Core:Init(Shared)
     self.rarityCache = {}
     
     self:connectEvents()
-    self:listenForBoostOffers()
+    self:listenForBoostOffers()  -- ✅ Escuchar ofertas del servidor
     
     task.delay(1.5, function()
         self:autoDetectTreadmill()
@@ -30,11 +30,22 @@ function Core:listenForBoostOffers()
     local boostRemote = remotes:FindFirstChild("TreadmillBoost")
     if not boostRemote then return end
     
-    -- Escuchar ofertas del servidor
+    -- ✅ Escuchar cuando el servidor envía "Offer" con UUID
     boostRemote.OnClientEvent:Connect(function(action, uuid)
         if action == "Offer" and uuid then
             self.State.currentBoostUUID = uuid
-            self.Utils:log("🎯 Boost disponible: " .. uuid)
+            self.Utils:log("🎯 Boost Offer recibido: " .. uuid)
+            
+            -- ✅ Reclamar automáticamente si el switch está activo
+            if self.Switches.boost and self.Switches.boost.state then
+                task.spawn(function()
+                    task.wait(0.3)
+                    self:claimTreadmillBoost()
+                end)
+            end
+        elseif action == "Claimed" then
+            self.Utils:log("✅ Boost Claimed: " .. tostring(uuid))
+            self.State.currentBoostUUID = nil
         elseif action == "Expired" or action == "Clear" then
             self.State.currentBoostUUID = nil
         end
@@ -42,7 +53,10 @@ function Core:listenForBoostOffers()
 end
 
 function Core:claimTreadmillBoost()
-    if not self.State.currentBoostUUID then return false end
+    if not self.State.currentBoostUUID then 
+        self.Utils:log("⚠️ No hay UUID de boost disponible")
+        return false 
+    end
     
     local remotes = self.Shared.Services.ReplicatedStorage:FindFirstChild("Remotes")
     if not remotes then return false end
@@ -50,19 +64,20 @@ function Core:claimTreadmillBoost()
     local boostRemote = remotes:FindFirstChild("TreadmillBoost")
     if not boostRemote then return false end
     
-    self.Utils:log("🚀 Reclamando Boost: " .. self.State.currentBoostUUID)
+    self.Utils:log(" Claiming Boost: " .. self.State.currentBoostUUID)
     
+    -- ✅ Enviar "Claim" con el UUID (NO FireServer() vacío)
     local ok = pcall(function()
         boostRemote:FireServer("Claim", self.State.currentBoostUUID)
     end)
     
     if ok then
-        self.Utils:log("✅ Boost reclamado")
-        self.State.currentBoostUUID = nil
+        self.Utils:log("✅ Boost Claim enviado")
         return true
+    else
+        self.Utils:log("❌ Falló al enviar Claim")
+        return false
     end
-    
-    return false
 end
 
 -- ============================================
@@ -80,20 +95,37 @@ function Core:doRebirth()
         local ok, result = pcall(function() return askRebirth:InvokeServer() end)
         
         if ok and result then
-            self.Utils:log("✅ AskRebirth OK")
+            self.Utils:log("✅ AskRebirth OK: " .. tostring(result))
             if doRebirthRemote then
                 task.wait(0.5)
-                local ok2 = pcall(function() doRebirthRemote:InvokeServer() end)
+                local ok2, result2 = pcall(function() return doRebirthRemote:InvokeServer() end)
                 if ok2 then
                     self.Utils:log("✅ Rebirth ejecutado")
                     return true
                 end
             end
         else
-            self.Utils:log("⚠️ Rebirth no disponible")
+            self.Utils:log("⚠️ Rebirth no disponible aún")
         end
     end
     return false
+end
+
+function Core:listenForRebirth()
+    task.spawn(function()
+        while self.GUI.screenGui and self.GUI.screenGui.Parent do
+            if self.State.rebirthEnabled then
+                local success = self:doRebirth()
+                if success then
+                    task.wait(self.Config.rebirthInterval or 30)
+                else
+                    task.wait(60)
+                end
+            else
+                task.wait(2)
+            end
+        end
+    end)
 end
 
 -- ============================================
@@ -106,7 +138,7 @@ function Core:placeEgg(eggUUID, x, y)
     local placeEggRemote = remotes:FindFirstChild("PlaceEggRequest")
     if not placeEggRemote then return false end
     
-    self.Utils:log(" Colocando huevo en (" .. x .. ", " .. y .. ")")
+    self.Utils:log("📍 Colocando huevo: " .. eggUUID)
     
     local ok, result = pcall(function()
         return placeEggRemote:InvokeServer(eggUUID, x, y)
@@ -114,7 +146,7 @@ function Core:placeEgg(eggUUID, x, y)
     
     if ok and result == true then
         self.Utils:log("✅ Huevo colocado")
-        self.State.placeCount = self.State.placeCount + 1
+        self.State.placeCount = (self.State.placeCount or 0) + 1
         return true
     end
     
@@ -139,7 +171,7 @@ function Core:openEgg(eggUUID)
     
     if ok then
         self.Utils:log("✅ Huevo abierto")
-        self.State.openCount = self.State.openCount + 1
+        self.State.openCount = (self.State.openCount or 0) + 1
         return true
     end
     
@@ -164,7 +196,7 @@ function Core:sellAll()
     
     if ok then
         self.Utils:log("✅ Venta realizada")
-        self.State.sellCount = self.State.sellCount + 1
+        self.State.sellCount = (self.State.sellCount or 0) + 1
         return true
     end
     
@@ -223,7 +255,7 @@ end
 -- 🎯 AUTO-DETECT TREADMILL
 -- ============================================
 function Core:autoDetectTreadmill()
-    self.Utils:log("🔍 Buscando treadmill automáticamente...")
+    self.Utils:log(" Buscando treadmill automáticamente...")
     local Workspace = self.Shared.Services.Workspace
     local essentials = Workspace:FindFirstChild("Essentials")
     if not essentials then return false end
@@ -236,7 +268,10 @@ function Core:autoDetectTreadmill()
     
     for _, tycoon in ipairs(tycoons:GetChildren()) do
         if tycoon:IsA("Model") or tycoon:IsA("Folder") then
-            local owner = tycoon:GetAttribute("Owner") or tycoon:GetAttribute("OwnerUserId") or tycoon:GetAttribute("PlotOwner")
+            local owner = tycoon:GetAttribute("Owner") 
+                or tycoon:GetAttribute("OwnerUserId") 
+                or tycoon:GetAttribute("PlotOwner")
+            
             if owner == player.Name or owner == tostring(player.UserId) then
                 local region = tycoon:FindFirstChild("TreadmillRegion")
                 if region then
@@ -247,6 +282,7 @@ function Core:autoDetectTreadmill()
                         _G.MyTreadmillPos = pos
                         _G.MyPlot = tycoon
                         _G.MyTreadmillInv = inv
+                        
                         self.Utils:log("✅ Treadmill detectado por Owner: " .. tycoon.Name)
                         self:updateTreadmillUI(true, tycoon.Name)
                         return true
@@ -292,7 +328,7 @@ function Core:autoDetectTreadmill()
         return true
     end
     
-    self.Utils:log(" No se pudo auto-detectar")
+    self.Utils:log("❌ No se pudo auto-detectar")
     self:updateTreadmillUI(false, "No detectado")
     return false
 end
@@ -300,10 +336,10 @@ end
 function Core:updateTreadmillUI(success, name)
     if self.GUI.treadmillInfo then
         if success then
-            self.GUI.treadmillInfo.Text = "🏃 Plot: " .. name .. " ✅"
+            self.GUI.treadmillInfo.Text = " Plot: " .. name .. " ✅"
             self.GUI.treadmillInfo.TextColor3 = self.Config.success
         else
-            self.GUI.treadmillInfo.Text = "🏃 Treadmill: ❌ No detectado"
+            self.GUI.treadmillInfo.Text = "🏃 Treadmill:  No detectado"
             self.GUI.treadmillInfo.TextColor3 = self.Config.danger
         end
     end
@@ -389,11 +425,6 @@ function Core:tpToTreadmill()
     self.GUI.statusLabel.Text = "🏃 En Treadmill..."
     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
     
-    task.wait(1)
-    if self.Switches.boost and self.Switches.boost.state then
-        self:claimTreadmillBoost()
-    end
-    
     return true
 end
 
@@ -406,7 +437,7 @@ function Core:leaveTreadmill()
 end
 
 -- ============================================
---  EVENTOS (Switches corregidos)
+-- 🎯 EVENTOS (Switches corregidos)
 -- ============================================
 function Core:connectEvents()
     local GUI = self.GUI
@@ -484,7 +515,7 @@ function Core:connectEvents()
         self.Switches.esp:setState(State.espEnabled)
         if not State.espEnabled then self:clearAllEsp() end
         self:updateEspVisibility()
-        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "👁️ ESP OFF")
+        self.Utils:log(State.espEnabled and "👁️ ESP ON" or "️ ESP OFF")
     end)
     
     self.Switches.speed.button.MouseButton1Click:Connect(function()
@@ -545,7 +576,7 @@ function Core:connectEvents()
         self.Switches.openEgg.button.MouseButton1Click:Connect(function()
             State.openEggEnabled = not State.openEggEnabled
             self.Switches.openEgg:setState(State.openEggEnabled)
-            self.Utils:log(State.openEggEnabled and "🔓 Auto Open ON" or " Auto Open OFF")
+            self.Utils:log(State.openEggEnabled and "🔓 Auto Open ON" or "🔓 Auto Open OFF")
         end)
     end
     
@@ -613,7 +644,7 @@ function Core:applyPreset(type)
         elseif type == "ALL" then self.State.stealFilters[r.name] = true end
     end
     self:updateFilterUI()
-    self.Utils:log(" Preset aplicado: " .. type)
+    self.Utils:log("⚡ Preset aplicado: " .. type)
 end
 
 -- ============================================
@@ -651,7 +682,7 @@ function Core:StartLoops(Shared)
                 end
             end
             task.wait(1)
-        end
+  end
     end)
     
     -- ESP lines loop
@@ -675,7 +706,7 @@ function Core:StartLoops(Shared)
         while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.sellEnabled then
                 local timeSinceSell = tick() - self.State.lastSell
-                if timeSinceSell >= self.Config.sellInterval then
+                if timeSinceSell >= (self.Config.sellInterval or 60) then
                     self:sellAll()
                     self.State.lastSell = tick()
                 end
@@ -686,11 +717,11 @@ function Core:StartLoops(Shared)
     
     -- ✅ Auto Open Egg loop
     task.spawn(function()
-        while self.GUI.screenGui and self.GUI.screenGui.Parent do
+        while self.GUI.screenGui and self.GUI.screenscreenGui.Parent do
             if self.State.openEggEnabled then
                 self:checkAndOpenEggs()
             end
-            task.wait(self.Config.openEggDelay)
+            task.wait(self.Config.openEggDelay or 1)
         end
     end)
     
@@ -700,7 +731,7 @@ function Core:StartLoops(Shared)
             if self.State.placeEggEnabled then
                 self:checkAndPlaceEggs()
             end
-            task.wait(self.Config.placeEggDelay)
+            task.wait(self.Config.placeEggDelay or 2)
         end
     end)
     
@@ -720,7 +751,7 @@ function Core:StartLoops(Shared)
             if self.State.rebirthEnabled then
                 local success = self:doRebirth()
                 if success then
-                    task.wait(self.Config.rebirthInterval)
+                    task.wait(self.Config.rebirthInterval or 30)
                 else
                     task.wait(60)
                 end
@@ -740,7 +771,7 @@ function Core:StartLoops(Shared)
         end
     end)
     
-    -- ✅ Auto Boost Claim loop
+    -- ✅ Auto Boost Claim loop (ya manejado por el listener)
     task.spawn(function()
         while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.onTreadmill and self.Switches.boost and self.Switches.boost.state then
@@ -844,7 +875,7 @@ end
 
 function Core:updateStats()
     self.GUI.statsLabel.Text = string.format("🥚 %d | 💰 %d | 🔄 %d", 
-        self.State.stolenCount, self.State.sellCount, self.State.openCount)
+        self.State.stolenCount or 0, self.State.sellCount or 0, self.State.openCount or 0)
 end
 
 function Core:tpToSpawn()
@@ -920,7 +951,7 @@ function Core:createEsp(egg, rarity)
     nameLabel.Size = UDim2.new(1, -8, 0, 14)
     nameLabel.Position = UDim2.new(0, 4, 0, 2)
     nameLabel.BackgroundTransparency = 1
-    nameLabel.Text = " " .. egg.Name
+    nameLabel.Text = "🥚 " .. egg.Name
     nameLabel.TextColor3 = Color3.new(1, 1, 1)
     nameLabel.TextSize = 10
     nameLabel.Font = Enum.Font.GothamBold
@@ -940,7 +971,7 @@ function Core:createEsp(egg, rarity)
     kgLabel.Size = UDim2.new(1, -8, 0, 12)
     kgLabel.Position = UDim2.new(0, 4, 0, 28)
     kgLabel.BackgroundTransparency = 1
-    kgLabel.Text = string.format("⚖️ %.2f kg", weight)
+    kgLabel.Text = string.format("️ %.2f kg", weight)
     kgLabel.TextColor3 = self.Config.accentGold
     kgLabel.TextSize = 8
     kgLabel.Font = Enum.Font.Gotham

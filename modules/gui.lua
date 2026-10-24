@@ -89,7 +89,7 @@ function GUI:createHeader()
     versionLabel.Size = UDim2.new(0, 70, 0, 12)
     versionLabel.Position = UDim2.new(0, 36, 1, -16)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v18 FULL"
+    versionLabel.Text = "v18.2 FIX"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 7
     versionLabel.Font = Enum.Font.GothamBold
@@ -186,7 +186,7 @@ function GUI:createTabRobo()
     
     local s1, s1Offset = self.Utils:createSection(tabRobo, 
         UDim2.new(1, 0, 0, 62), UDim2.new(0, 0, 0, 0),
-        "🎯 CONTROL DE ROBO", self.Config.accentGold)
+        " CONTROL DE ROBO", self.Config.accentGold)
     
     local btnLoop = Instance.new("TextButton")
     btnLoop.Size = UDim2.new(0.62, -3, 0, 30)
@@ -206,7 +206,7 @@ function GUI:createTabRobo()
     btnStop.Size = UDim2.new(0.36, -2, 0, 30)
     btnStop.Position = UDim2.new(0.64, 0, 0, s1Offset)
     btnStop.BackgroundColor3 = self.Config.danger
-    btnStop.Text = "⏸ STOP"
+    btnStop.Text = " STOP"
     btnStop.TextColor3 = Color3.new(1, 1, 1)
     btnStop.TextSize = 10
     btnStop.Font = Enum.Font.GothamBold
@@ -239,7 +239,7 @@ function GUI:createTabRobo()
     nameFilter.TextSize = 9
     nameFilter.Font = Enum.Font.Gotham
     nameFilter.BorderSizePixel = 0
-    nameFilter.PlaceholderText = " Filtrar nombre..."
+    nameFilter.PlaceholderText = "🔍 Filtrar nombre..."
     nameFilter.PlaceholderColor3 = self.Config.textMuted
     nameFilter.ClearTextOnFocus = false
     nameFilter.Parent = s1
@@ -341,7 +341,7 @@ function GUI:createTabRobo()
     btnNoneSteal.Size = UDim2.new(0, 55, 0, 16)
     btnNoneSteal.Position = UDim2.new(0, 64, 0, pillStartY + 2*(pillH + pillGapY) + 2)
     btnNoneSteal.BackgroundColor3 = self.Config.danger
-    btnNoneSteal.Text = "✗ NING"
+    btnNoneSteal.Text = " NING"
     btnNoneSteal.TextColor3 = Color3.new(1, 1, 1)
     btnNoneSteal.TextSize = 7
     btnNoneSteal.Font = Enum.Font.GothamBold
@@ -430,29 +430,33 @@ function GUI:createTabRobo()
     self.Buttons.esp = espButtons
 end
 
--- ✅ PESTAÑA MOD COMPLETA CON TODOS LOS SWITCHES
+-- ✅ PESTAÑA MOD CORREGIDA - Layout correcto con secciones
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
-    -- Sección 1: Básicos
+    -- ============================================
+    -- SECCIÓN 1: MÓDULOS BÁSICOS
+    -- ============================================
     local s1, s1Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 0),
+        UDim2.new(1, 0, 0, 100), UDim2.new(0, 0, 0, 0),
         "⚙️ MÓDULOS BÁSICOS", self.Config.accentCyan)
     
     local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s1Offset + 4), "👁️ ESP Visual", true)
     local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s1Offset + 4), "🏃 Speed", true)
-    local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 225, 0, s1Offset + 4), "️ AFK", true)
+    local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 225, 0, s1Offset + 4), "🛡️ AFK", true)
     
     self.Switches.esp = switchEsp
     self.Switches.speed = switchSpeed
     self.Switches.afk = switchAfk
     
-    -- Sección 2: Treadmill
+    -- ============================================
+    -- SECCIÓN 2: TREADMILL
+    -- ============================================
     local s2, s2Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 75),
-        " TREADMILL", self.Config.accentGold)
+        UDim2.new(1, 0, 0, 100), UDim2.new(0, 0, 0, 105),
+        "🏃 TREADMILL", self.Config.accentGold)
     
-    local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s2Offset + 4), "🏃 Auto Treadmill", false)
+    local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s2Offset + 4), " Auto Treadmill", false)
     local switchBoost = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s2Offset + 4), "⚡ Auto Boost", true)
     
     self.Switches.treadmill = switchTreadmill
@@ -460,24 +464,24 @@ function GUI:createTabMod()
     
     -- Indicador de Treadmill
     local treadmillInfo = Instance.new("TextLabel")
-    treadmillInfo.Size = UDim2.new(1, -10, 0, 14)
+    treadmillInfo.Size = UDim2.new(1, -10, 0, 16)
     treadmillInfo.Position = UDim2.new(0, 5, 0, s2Offset + 36)
     treadmillInfo.BackgroundTransparency = 1
     treadmillInfo.Text = "🏃 Treadmill: Buscando..."
     treadmillInfo.TextColor3 = self.Config.textMuted
-    treadmillInfo.TextSize = 8
+    treadmillInfo.TextSize = 9
     treadmillInfo.Font = Enum.Font.GothamBold
     treadmillInfo.TextXAlignment = Enum.TextXAlignment.Left
     treadmillInfo.Parent = tabMod
     
     -- Botón Re-detectar
     local btnRedetect = Instance.new("TextButton")
-    btnRedetect.Size = UDim2.new(1, -10, 0, 18)
-    btnRedetect.Position = UDim2.new(0, 5, 0, s2Offset + 52)
+    btnRedetect.Size = UDim2.new(1, -10, 0, 22)
+    btnRedetect.Position = UDim2.new(0, 5, 0, s2Offset + 56)
     btnRedetect.BackgroundColor3 = self.Config.accentCyan
     btnRedetect.Text = "🔍 Re-detectar Treadmill"
     btnRedetect.TextColor3 = Color3.new(0, 0, 0)
-    btnRedetect.TextSize = 8
+    btnRedetect.TextSize = 9
     btnRedetect.Font = Enum.Font.GothamBold
     btnRedetect.BorderSizePixel = 0
     btnRedetect.Parent = tabMod
@@ -486,9 +490,11 @@ function GUI:createTabMod()
     self.GUI.treadmillInfo = treadmillInfo
     self.GUI.btnRedetect = btnRedetect
     
-    -- Sección 3: Huevos
+    -- ============================================
+    -- SECCIÓN 3: HUEVOS
+    -- ============================================
     local s3, s3Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 150),
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 210),
         "🥚 HUEVOS", self.Config.accentPink)
     
     local switchPlaceEgg = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s3Offset + 4), "📍 Auto Place", false)
@@ -497,20 +503,24 @@ function GUI:createTabMod()
     self.Switches.placeEgg = switchPlaceEgg
     self.Switches.openEgg = switchOpenEgg
     
-    -- Sección 4: Animales
+    -- ============================================
+    -- SECCIÓN 4: ANIMALES
+    -- ============================================
     local s4, s4Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 225),
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 285),
         "🐾 ANIMALES", self.Config.success)
     
-    local switchSell = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s4Offset + 4), "💰 Auto Sell", false)
+    local switchSell = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s4Offset + 4), " Auto Sell", false)
     local switchEquip = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s4Offset + 4), "⭐ Equip Best", false)
     
     self.Switches.sell = switchSell
     self.Switches.equip = switchEquip
     
-    -- Sección 5: Avanzado
+    -- ============================================
+    -- SECCIÓN 5: AVANZADO
+    -- ============================================
     local s5, s5Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 300),
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 360),
         "🔄 AVANZADO", self.Config.danger)
     
     local switchRebirth = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s5Offset + 4), "🔄 Auto Rebirth", false)
@@ -519,15 +529,17 @@ function GUI:createTabMod()
     self.Switches.rebirth = switchRebirth
     self.Switches.offline = switchOffline
     
-    -- Info de atajos
+    -- ============================================
+    -- INFO DE ATAJOS
+    -- ============================================
     local hkInfo = Instance.new("TextLabel")
     hkInfo.Size = UDim2.new(1, -10, 0, 60)
-    hkInfo.Position = UDim2.new(0, 5, 0, 375)
+    hkInfo.Position = UDim2.new(0, 5, 0, 435)
     hkInfo.BackgroundColor3 = self.Config.bgGlass
     hkInfo.BorderSizePixel = 0
     hkInfo.Text = "⌨️ ATAJOS:\nF1:Loop F2:Tread F3:ESP\nF4:Speed F5:AFK\nF6:TOP F7:LEG F8:ALL"
     hkInfo.TextColor3 = self.Config.textPrimary
-    hkInfo.TextSize = 8
+    hkInfo.TextSize = 9
     hkInfo.Font = Enum.Font.Gotham
     hkInfo.TextXAlignment = Enum.TextXAlignment.Left
     hkInfo.TextYAlignment = Enum.TextYAlignment.Top
@@ -544,7 +556,7 @@ function GUI:createTabLog()
     btnClearLog.Size = UDim2.new(0, 60, 0, 20)
     btnClearLog.Position = UDim2.new(1, -65, 0, 5)
     btnClearLog.BackgroundColor3 = self.Config.bgGlass
-    btnClearLog.Text = "🗑️ Limpiar"
+    btnClearLog.Text = "️ Limpiar"
     btnClearLog.TextColor3 = self.Config.textSecondary
     btnClearLog.TextSize = 8
     btnClearLog.Font = Enum.Font.GothamBold
@@ -609,7 +621,7 @@ function GUI:createStatusBar()
     statsLabel.Size = UDim2.new(0.5, -5, 1, 0)
     statsLabel.Position = UDim2.new(0.5, 0, 0, 0)
     statsLabel.BackgroundTransparency = 1
-    statsLabel.Text = "🥚 0 | 💰 0 | 🔄 0"
+    statsLabel.Text = " 0 | 💰 0 | 🔄 0"
     statsLabel.TextColor3 = self.Config.textSecondary
     statsLabel.TextSize = 8
     statsLabel.Font = Enum.Font.GothamBold
