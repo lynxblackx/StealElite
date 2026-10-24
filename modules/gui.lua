@@ -1,3 +1,6 @@
+-- ============================================
+-- GUI v18.1 - MOD TAB CORREGIDO
+-- ============================================
 local GUI = {}
 
 function GUI:Build(Shared)
@@ -87,9 +90,9 @@ function GUI:createHeader()
     
     local versionLabel = Instance.new("TextLabel")
     versionLabel.Size = UDim2.new(0, 70, 0, 12)
-    versionLabel.Position = UDim2.new(0, 36, 1, -16)
+versionLabel.Position = UDim2.new(0, 36, 1, -16)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v18 FULL"
+    versionLabel.Text = "v18.1 FIX"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 7
     versionLabel.Font = Enum.Font.GothamBold
@@ -258,7 +261,7 @@ function GUI:createTabRobo()
     btnPresetTop.Size = UDim2.new(0, 108, 0, 20)
     btnPresetTop.Position = UDim2.new(0, 6, 0, 70)
     btnPresetTop.BackgroundColor3 = self.Config.accentGold
-    btnPresetTop.Text = "👑 TOP (GOD+EXC+OG)"
+    btnPresetTop.Text = " TOP (GOD+EXC+OG)"
     btnPresetTop.TextColor3 = Color3.new(0, 0, 0)
     btnPresetTop.TextSize = 8
     btnPresetTop.Font = Enum.Font.GothamBold
@@ -293,29 +296,18 @@ function GUI:createTabRobo()
     self.Utils:createCorner(btnPresetAll, 6)
     btnPresetAll.MouseButton1Click:Connect(function() applyPreset("ALL") end)
 
-    local s2, s2Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 96),
-        "🎯 FILTROS DE ROBO", self.Config.accentGold)
-    
+    local s2, s2Offset = self.Utils:createSection(tabRobo, UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 96), " FILTROS DE ROBO", self.Config.accentGold)
     local stealButtons = {}
     local pillW, pillH, pillGapX, pillGapY = 62, 20, 4, 2
     local pillStartX = 6
     local pillStartY = s2Offset + 2
-    
     for i, rarity in ipairs(self.Shared.Rarities) do
         local row = math.floor((i - 1) / 5)
         local col = (i - 1) % 5
         local x = pillStartX + col * (pillW + pillGapX)
         local y = pillStartY + row * (pillH + pillGapY)
-        
-        local btn = self.Utils:createPillButton(s2,
-            UDim2.new(0, pillW, 0, pillH),
-            UDim2.new(0, x, 0, y),
-            rarity.icon .. " " .. rarity.short,
-            rarity.color, 7)
-        
+        local btn = self.Utils:createPillButton(s2, UDim2.new(0, pillW, 0, pillH), UDim2.new(0, x, 0, y), rarity.icon .. " " .. rarity.short, rarity.color, 7)
         table.insert(stealButtons, {button = btn, rarity = rarity})
-        
         btn.MouseButton1Click:Connect(function()
             self.State.stealFilters[rarity.name] = not self.State.stealFilters[rarity.name]
             if self.State.stealFilters[rarity.name] then
@@ -329,7 +321,6 @@ function GUI:createTabRobo()
             end
         end)
     end
-    
     local btnAllSteal = Instance.new("TextButton")
     btnAllSteal.Size = UDim2.new(0, 55, 0, 16)
     btnAllSteal.Position = UDim2.new(0, 6, 0, pillStartY + 2*(pillH + pillGapY) + 2)
@@ -349,7 +340,6 @@ function GUI:createTabRobo()
             item.button.TextColor3 = Color3.new(0, 0, 0)
         end
     end)
-    
     local btnNoneSteal = Instance.new("TextButton")
     btnNoneSteal.Size = UDim2.new(0, 55, 0, 16)
     btnNoneSteal.Position = UDim2.new(0, 64, 0, pillStartY + 2*(pillH + pillGapY) + 2)
@@ -365,32 +355,21 @@ function GUI:createTabRobo()
         for _, item in ipairs(stealButtons) do
             self.State.stealFilters[item.rarity.name] = false
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "✗" .. item.rarity.short
+            item.button.Text = "" .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
     end)
-    
-    local s3, s3Offset = self.Utils:createSection(tabRobo,
-        UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 186),
-        "👁️ FILTROS DE ESP", self.Config.accentCyan)
-    
+
+    local s3, s3Offset = self.Utils:createSection(tabRobo, UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 186), "👁️ FILTROS DE ESP", self.Config.accentCyan)
     local espButtons = {}
     local espPillStartY = s3Offset + 2
-    
     for i, rarity in ipairs(self.Shared.Rarities) do
         local row = math.floor((i - 1) / 5)
         local col = (i - 1) % 5
         local x = pillStartX + col * (pillW + pillGapX)
         local y = espPillStartY + row * (pillH + pillGapY)
-        
-        local btn = self.Utils:createPillButton(s3,
-            UDim2.new(0, pillW, 0, pillH),
-            UDim2.new(0, x, 0, y),
-            rarity.icon .. " " .. rarity.short,
-            rarity.color, 7)
-        
+        local btn = self.Utils:createPillButton(s3, UDim2.new(0, pillW, 0, pillH), UDim2.new(0, x, 0, y), rarity.icon .. " " .. rarity.short, rarity.color, 7)
         table.insert(espButtons, {button = btn, rarity = rarity})
-        
         btn.MouseButton1Click:Connect(function()
             self.State.espFilters[rarity.name] = not self.State.espFilters[rarity.name]
             if self.State.espFilters[rarity.name] then
@@ -405,7 +384,6 @@ function GUI:createTabRobo()
             if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
         end)
     end
-    
     local btnAllEsp = Instance.new("TextButton")
     btnAllEsp.Size = UDim2.new(0, 55, 0, 16)
     btnAllEsp.Position = UDim2.new(0, 6, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
@@ -426,12 +404,11 @@ function GUI:createTabRobo()
         end
         if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
-    
     local btnNoneEsp = Instance.new("TextButton")
     btnNoneEsp.Size = UDim2.new(0, 55, 0, 16)
     btnNoneEsp.Position = UDim2.new(0, 64, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
     btnNoneEsp.BackgroundColor3 = self.Config.danger
-    btnNoneEsp.Text = "✗ NING"
+    btnNoneEsp.Text = " NING"
     btnNoneEsp.TextColor3 = Color3.new(1, 1, 1)
     btnNoneEsp.TextSize = 7
     btnNoneEsp.Font = Enum.Font.GothamBold
@@ -447,7 +424,7 @@ function GUI:createTabRobo()
         end
         if self.Shared.Core then self.Shared.Core:updateEspVisibility() end
     end)
-    
+
     self.GUI.btnLoop = btnLoop
     self.GUI.btnStop = btnStop
     self.GUI.delayInput = delayInput
@@ -456,17 +433,17 @@ function GUI:createTabRobo()
     self.Buttons.esp = espButtons
 end
 
--- ✅ PESTAÑA MOD COMPLETA CON TODAS LAS FUNCIONES
+-- ✅ PESTAÑA MOD CORREGIDA - TODOS LOS SWITCHES VISIBLES
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
-    -- Sección 1: Básicos
+    -- Sección 1: Básicos (ESP, Speed, AFK)
     local s1, s1Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 140), UDim2.new(0, 0, 0, 0),
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 0),
         "⚙️ MÓDULOS BÁSICOS", self.Config.accentCyan)
     
-    local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s1Offset + 4), "️ ESP Visual", true)
-    local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s1Offset + 4), "🏃 Speed", true)
+    local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s1Offset + 4), "👁️ ESP Visual", true)
+    local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s1Offset + 4), " Speed", true)
     local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 225, 0, s1Offset + 4), "🛡️ AFK", true)
     
     self.Switches.esp = switchEsp
@@ -475,54 +452,21 @@ function GUI:createTabMod()
     
     -- Sección 2: Treadmill y Boost
     local s2, s2Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 110), UDim2.new(0, 0, 0, 145),
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 75),
         "🏃 TREADMILL", self.Config.accentGold)
     
     local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s2Offset + 4), "🏃 Auto Treadmill", false)
-    local switchBoost = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s2Offset + 4), " Auto Boost", true)
+    local switchBoost = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s2Offset + 4), "⚡ Auto Boost", true)
     
     self.Switches.treadmill = switchTreadmill
     self.Switches.boost = switchBoost
     
-    -- Sección 3: Huevos
-    local s3, s3Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 110), UDim2.new(0, 0, 0, 260),
-        " HUEVOS", self.Config.accentPink)
-    
-    local switchPlaceEgg = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s3Offset + 4), "📍 Auto Place", false)
-    local switchOpenEgg = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s3Offset + 4), "🔓 Auto Open", false)
-    
-    self.Switches.placeEgg = switchPlaceEgg
-    self.Switches.openEgg = switchOpenEgg
-    
-    -- Sección 4: Animales y Rebirth
-    local s4, s4Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 110), UDim2.new(0, 0, 0, 375),
-        "🐾 ANIMALES", self.Config.success)
-    
-    local switchSell = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s4Offset + 4), "💰 Auto Sell", false)
-    local switchEquip = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s4Offset + 4), "⭐ Equip Best", false)
-    
-    self.Switches.sell = switchSell
-    self.Switches.equip = switchEquip
-    
-    -- Sección 5: Rebirth y Offline
-    local s5, s5Offset = self.Utils:createSection(tabMod,
-        UDim2.new(1, 0, 0, 80), UDim2.new(0, 0, 0, 490),
-        " AVANZADO", self.Config.danger)
-    
-    local switchRebirth = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s5Offset + 4), "🔄 Auto Rebirth", false)
-    local switchOffline = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s5Offset + 4), " Offline Reward", false)
-    
-    self.Switches.rebirth = switchRebirth
-    self.Switches.offline = switchOffline
-    
     -- Indicador de Treadmill
     local treadmillInfo = Instance.new("TextLabel")
     treadmillInfo.Size = UDim2.new(1, -10, 0, 14)
-    treadmillInfo.Position = UDim2.new(0, 5, 0, 575)
+    treadmillInfo.Position = UDim2.new(0, 5, 0, s2Offset + 36)
     treadmillInfo.BackgroundTransparency = 1
-    treadmillInfo.Text = " Treadmill: Buscando..."
+    treadmillInfo.Text = "🏃 Treadmill: Buscando..."
     treadmillInfo.TextColor3 = self.Config.textMuted
     treadmillInfo.TextSize = 8
     treadmillInfo.Font = Enum.Font.GothamBold
@@ -531,8 +475,8 @@ function GUI:createTabMod()
     
     -- Botón Re-detectar
     local btnRedetect = Instance.new("TextButton")
-    btnRedetect.Size = UDim2.new(1, -10, 0, 20)
-    btnRedetect.Position = UDim2.new(0, 5, 0, 591)
+    btnRedetect.Size = UDim2.new(1, -10, 0, 18)
+    btnRedetect.Position = UDim2.new(0, 5, 0, s2Offset + 52)
     btnRedetect.BackgroundColor3 = self.Config.accentCyan
     btnRedetect.Text = "🔍 Re-detectar Treadmill"
     btnRedetect.TextColor3 = Color3.new(0, 0, 0)
@@ -544,6 +488,55 @@ function GUI:createTabMod()
     
     self.GUI.treadmillInfo = treadmillInfo
     self.GUI.btnRedetect = btnRedetect
+    
+    -- Sección 3: Huevos
+    local s3, s3Offset = self.Utils:createSection(tabMod,
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 150),
+        "🥚 HUEVOS", self.Config.accentPink)
+    
+    local switchPlaceEgg = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s3Offset + 4), "📍 Auto Place", false)
+    local switchOpenEgg = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s3Offset + 4), "🔓 Auto Open", false)
+    
+    self.Switches.placeEgg = switchPlaceEgg
+    self.Switches.openEgg = switchOpenEgg
+    
+    -- Sección 4: Animales
+    local s4, s4Offset = self.Utils:createSection(tabMod,
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 225),
+        "🐾 ANIMALES", self.Config.success)
+    
+    local switchSell = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s4Offset + 4), "💰 Auto Sell", false)
+    local switchEquip = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s4Offset + 4), "⭐ Equip Best", false)
+    
+    self.Switches.sell = switchSell
+    self.Switches.equip = switchEquip
+    
+    -- Sección 5: Avanzado
+    local s5, s5Offset = self.Utils:createSection(tabMod,
+        UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 300),
+        "🔄 AVANZADO", self.Config.danger)
+    
+    local switchRebirth = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s5Offset + 4), "🔄 Auto Rebirth", false)
+    local switchOffline = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s5Offset + 4), "🎁 Offline Reward", false)
+    
+    self.Switches.rebirth = switchRebirth
+    self.Switches.offline = switchOffline
+    
+    -- Info de atajos
+    local hkInfo = Instance.new("TextLabel")
+    hkInfo.Size = UDim2.new(1, -10, 0, 60)
+    hkInfo.Position = UDim2.new(0, 5, 0, 375)
+    hkInfo.BackgroundColor3 = self.Config.bgGlass
+    hkInfo.BorderSizePixel = 0
+    hkInfo.Text = "⌨️ ATAJOS:\nF1:Loop F2:Tread F3:ESP\nF4:Speed F5:AFK\nF6:TOP F7:LEG F8:ALL"
+    hkInfo.TextColor3 = self.Config.textPrimary
+    hkInfo.TextSize = 8
+    hkInfo.Font = Enum.Font.Gotham
+    hkInfo.TextXAlignment = Enum.TextXAlignment.Left
+    hkInfo.TextYAlignment = Enum.TextYAlignment.Top
+    hkInfo.Parent = tabMod
+    self.Utils:createCorner(hkInfo, 6)
+    self.Utils:createStroke(hkInfo, self.Config.accentCyan, 1, 0.5)
 end
 
 -- ✅ PESTAÑA LOG
