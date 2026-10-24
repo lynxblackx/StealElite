@@ -1,6 +1,3 @@
--- ============================================
--- GUI v18.1 - MOD TAB CORREGIDO
--- ============================================
 local GUI = {}
 
 function GUI:Build(Shared)
@@ -90,9 +87,9 @@ function GUI:createHeader()
     
     local versionLabel = Instance.new("TextLabel")
     versionLabel.Size = UDim2.new(0, 70, 0, 12)
-versionLabel.Position = UDim2.new(0, 36, 1, -16)
+    versionLabel.Position = UDim2.new(0, 36, 1, -16)
     versionLabel.BackgroundTransparency = 1
-    versionLabel.Text = "v18.1 FIX"
+    versionLabel.Text = "v18 FULL"
     versionLabel.TextColor3 = self.Config.accentGold
     versionLabel.TextSize = 7
     versionLabel.Font = Enum.Font.GothamBold
@@ -242,7 +239,7 @@ function GUI:createTabRobo()
     nameFilter.TextSize = 9
     nameFilter.Font = Enum.Font.Gotham
     nameFilter.BorderSizePixel = 0
-    nameFilter.PlaceholderText = "🔍 Filtrar nombre..."
+    nameFilter.PlaceholderText = " Filtrar nombre..."
     nameFilter.PlaceholderColor3 = self.Config.textMuted
     nameFilter.ClearTextOnFocus = false
     nameFilter.Parent = s1
@@ -261,7 +258,7 @@ function GUI:createTabRobo()
     btnPresetTop.Size = UDim2.new(0, 108, 0, 20)
     btnPresetTop.Position = UDim2.new(0, 6, 0, 70)
     btnPresetTop.BackgroundColor3 = self.Config.accentGold
-    btnPresetTop.Text = " TOP (GOD+EXC+OG)"
+    btnPresetTop.Text = "👑 TOP (GOD+EXC+OG)"
     btnPresetTop.TextColor3 = Color3.new(0, 0, 0)
     btnPresetTop.TextSize = 8
     btnPresetTop.Font = Enum.Font.GothamBold
@@ -296,7 +293,7 @@ function GUI:createTabRobo()
     self.Utils:createCorner(btnPresetAll, 6)
     btnPresetAll.MouseButton1Click:Connect(function() applyPreset("ALL") end)
 
-    local s2, s2Offset = self.Utils:createSection(tabRobo, UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 96), " FILTROS DE ROBO", self.Config.accentGold)
+    local s2, s2Offset = self.Utils:createSection(tabRobo, UDim2.new(1, 0, 0, 85), UDim2.new(0, 0, 0, 96), "🎯 FILTROS DE ROBO", self.Config.accentGold)
     local stealButtons = {}
     local pillW, pillH, pillGapX, pillGapY = 62, 20, 4, 2
     local pillStartX = 6
@@ -355,7 +352,7 @@ function GUI:createTabRobo()
         for _, item in ipairs(stealButtons) do
             self.State.stealFilters[item.rarity.name] = false
             item.button.BackgroundColor3 = Color3.fromRGB(40, 45, 65)
-            item.button.Text = "" .. item.rarity.short
+            item.button.Text = "✗" .. item.rarity.short
             item.button.TextColor3 = self.Config.textMuted
         end
     end)
@@ -408,7 +405,7 @@ function GUI:createTabRobo()
     btnNoneEsp.Size = UDim2.new(0, 55, 0, 16)
     btnNoneEsp.Position = UDim2.new(0, 64, 0, espPillStartY + 2*(pillH + pillGapY) + 2)
     btnNoneEsp.BackgroundColor3 = self.Config.danger
-    btnNoneEsp.Text = " NING"
+    btnNoneEsp.Text = "✗ NING"
     btnNoneEsp.TextColor3 = Color3.new(1, 1, 1)
     btnNoneEsp.TextSize = 7
     btnNoneEsp.Font = Enum.Font.GothamBold
@@ -433,27 +430,27 @@ function GUI:createTabRobo()
     self.Buttons.esp = espButtons
 end
 
--- ✅ PESTAÑA MOD CORREGIDA - TODOS LOS SWITCHES VISIBLES
+-- ✅ PESTAÑA MOD COMPLETA CON TODOS LOS SWITCHES
 function GUI:createTabMod()
     local tabMod = self.GUI.tabMod
     
-    -- Sección 1: Básicos (ESP, Speed, AFK)
+    -- Sección 1: Básicos
     local s1, s1Offset = self.Utils:createSection(tabMod,
         UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 0),
         "⚙️ MÓDULOS BÁSICOS", self.Config.accentCyan)
     
     local switchEsp = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s1Offset + 4), "👁️ ESP Visual", true)
-    local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s1Offset + 4), " Speed", true)
-    local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 225, 0, s1Offset + 4), "🛡️ AFK", true)
+    local switchSpeed = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s1Offset + 4), "🏃 Speed", true)
+    local switchAfk = self.Utils:createSwitch(tabMod, UDim2.new(0, 225, 0, s1Offset + 4), "️ AFK", true)
     
     self.Switches.esp = switchEsp
     self.Switches.speed = switchSpeed
     self.Switches.afk = switchAfk
     
-    -- Sección 2: Treadmill y Boost
+    -- Sección 2: Treadmill
     local s2, s2Offset = self.Utils:createSection(tabMod,
         UDim2.new(1, 0, 0, 70), UDim2.new(0, 0, 0, 75),
-        "🏃 TREADMILL", self.Config.accentGold)
+        " TREADMILL", self.Config.accentGold)
     
     local switchTreadmill = self.Utils:createSwitch(tabMod, UDim2.new(0, 5, 0, s2Offset + 4), "🏃 Auto Treadmill", false)
     local switchBoost = self.Utils:createSwitch(tabMod, UDim2.new(0, 115, 0, s2Offset + 4), "⚡ Auto Boost", true)

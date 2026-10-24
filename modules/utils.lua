@@ -49,7 +49,7 @@ function Utils:createPillButton(parent, size, position, text, color, textSize)
     return btn
 end
 
--- ✅ SWITCH ARREGLADO: Sin handler interno, solo visual
+-- ✅ SWITCH SIN HANDLER INTERNO (solo visual)
 function Utils:createSwitch(parent, position, text, initialState)
     local container = Instance.new("Frame")
     container.Size = UDim2.new(0, 110, 0, 28)
@@ -87,7 +87,7 @@ function Utils:createSwitch(parent, position, text, initialState)
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = container
     
-    -- Botón transparente SIN handler propio
+    -- Botón SIN handler propio
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundTransparency = 1

@@ -52,12 +52,10 @@ local Shared = {
     State = {
         loopRunning = false, speedEnabled = true, afkEnabled = true,
         espEnabled = true, treadmillEnabled = false, rebirthEnabled = false,
-        placeEggEnabled = false, openEggEnabled = false,
-        sellEnabled = false, equipBestEnabled = false,
-        offlineRewardEnabled = false,
-        onTreadmill = false, stolenCount = 0, failedCount = 0,
-        afkCount = 0, espCount = 0, treadmillTime = 0,
-        sellCount = 0, openCount = 0, placeCount = 0,
+        boostEnabled = true, placeEggEnabled = false, openEggEnabled = false,
+        sellEnabled = false, equipEnabled = false, offlineRewardEnabled = false,
+        onTreadmill = false, stolenCount = 0, failedCount = 0, afkCount = 0,
+        espCount = 0, treadmillTime = 0, sellCount = 0, openCount = 0, placeCount = 0,
         currentSlot = 1, lastInput = tick(), lastAfk = tick(),
         lastSell = tick(), lastOpen = tick(), lastPlace = tick(),
         isAfk = false, isMinimized = false,
@@ -83,4 +81,4 @@ Shared.Core = Core
 if Settings then Settings:Init(Shared) end
 
 Core:StartLoops(Shared)
-print("🚀 Steal Elite v18 listo - Todas las funciones activas")
+print("🚀 Steal Elite v18 listo")

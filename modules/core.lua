@@ -13,7 +13,7 @@ function Core:Init(Shared)
     self.rarityCache = {}
     
     self:connectEvents()
-    self:listenForBoostOffers() -- ✅ Escuchar ofertas de boost
+    self:listenForBoostOffers()
     
     task.delay(1.5, function()
         self:autoDetectTreadmill()
@@ -21,7 +21,7 @@ function Core:Init(Shared)
 end
 
 -- ============================================
--- 🚀 LISTENER DE TREADMILL BOOST (CORREGIDO)
+-- 🚀 TREADMILL BOOST (CORREGIDO CON LOG)
 -- ============================================
 function Core:listenForBoostOffers()
     local remotes = self.Shared.Services.ReplicatedStorage:FindFirstChild("Remotes")
@@ -30,11 +30,11 @@ function Core:listenForBoostOffers()
     local boostRemote = remotes:FindFirstChild("TreadmillBoost")
     if not boostRemote then return end
     
-    -- ✅ Escuchar cuando el servidor envía "Offer" con UUID
+    -- Escuchar ofertas del servidor
     boostRemote.OnClientEvent:Connect(function(action, uuid)
         if action == "Offer" and uuid then
             self.State.currentBoostUUID = uuid
-            self.Utils:log(" Boost disponible: " .. uuid)
+            self.Utils:log("🎯 Boost disponible: " .. uuid)
         elseif action == "Expired" or action == "Clear" then
             self.State.currentBoostUUID = nil
         end
@@ -89,6 +89,8 @@ function Core:doRebirth()
                     return true
                 end
             end
+        else
+            self.Utils:log("⚠️ Rebirth no disponible")
         end
     end
     return false
@@ -104,7 +106,7 @@ function Core:placeEgg(eggUUID, x, y)
     local placeEggRemote = remotes:FindFirstChild("PlaceEggRequest")
     if not placeEggRemote then return false end
     
-    self.Utils:log("📍 Colocando huevo en (" .. x .. ", " .. y .. ")")
+    self.Utils:log(" Colocando huevo en (" .. x .. ", " .. y .. ")")
     
     local ok, result = pcall(function()
         return placeEggRemote:InvokeServer(eggUUID, x, y)
@@ -218,7 +220,7 @@ function Core:claimOfflineReward()
 end
 
 -- ============================================
---  AUTO-DETECT TREADMILL
+-- 🎯 AUTO-DETECT TREADMILL
 -- ============================================
 function Core:autoDetectTreadmill()
     self.Utils:log("🔍 Buscando treadmill automáticamente...")
@@ -290,7 +292,7 @@ function Core:autoDetectTreadmill()
         return true
     end
     
-    self.Utils:log("❌ No se pudo auto-detectar")
+    self.Utils:log(" No se pudo auto-detectar")
     self:updateTreadmillUI(false, "No detectado")
     return false
 end
@@ -298,7 +300,7 @@ end
 function Core:updateTreadmillUI(success, name)
     if self.GUI.treadmillInfo then
         if success then
-            self.GUI.treadmillInfo.Text = " Plot: " .. name .. " ✅"
+            self.GUI.treadmillInfo.Text = "🏃 Plot: " .. name .. " ✅"
             self.GUI.treadmillInfo.TextColor3 = self.Config.success
         else
             self.GUI.treadmillInfo.Text = "🏃 Treadmill: ❌ No detectado"
@@ -404,7 +406,7 @@ function Core:leaveTreadmill()
 end
 
 -- ============================================
--- 🎯 EVENTOS (Switches corregidos)
+--  EVENTOS (Switches corregidos)
 -- ============================================
 function Core:connectEvents()
     local GUI = self.GUI
@@ -527,7 +529,7 @@ function Core:connectEvents()
         self.Switches.boost.button.MouseButton1Click:Connect(function()
             State.boostEnabled = not State.boostEnabled
             self.Switches.boost:setState(State.boostEnabled)
-            self.Utils:log(State.boostEnabled and " Auto Boost ON" or "⚡ Auto Boost OFF")
+            self.Utils:log(State.boostEnabled and "⚡ Auto Boost ON" or "⚡ Auto Boost OFF")
         end)
     end
     
@@ -543,7 +545,7 @@ function Core:connectEvents()
         self.Switches.openEgg.button.MouseButton1Click:Connect(function()
             State.openEggEnabled = not State.openEggEnabled
             self.Switches.openEgg:setState(State.openEggEnabled)
-            self.Utils:log(State.openEggEnabled and " Auto Open ON" or "🔓 Auto Open OFF")
+            self.Utils:log(State.openEggEnabled and "🔓 Auto Open ON" or " Auto Open OFF")
         end)
     end
     
@@ -551,7 +553,7 @@ function Core:connectEvents()
         self.Switches.sell.button.MouseButton1Click:Connect(function()
             State.sellEnabled = not State.sellEnabled
             self.Switches.sell:setState(State.sellEnabled)
-            self.Utils:log(State.sellEnabled and " Auto Sell ON" or "💰 Auto Sell OFF")
+            self.Utils:log(State.sellEnabled and "💰 Auto Sell ON" or "💰 Auto Sell OFF")
         end)
     end
     
@@ -611,7 +613,7 @@ function Core:applyPreset(type)
         elseif type == "ALL" then self.State.stealFilters[r.name] = true end
     end
     self:updateFilterUI()
-    self.Utils:log("⚡ Preset aplicado: " .. type)
+    self.Utils:log(" Preset aplicado: " .. type)
 end
 
 -- ============================================
@@ -686,7 +688,6 @@ function Core:StartLoops(Shared)
     task.spawn(function()
         while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.openEggEnabled then
-                -- Buscar huevos listos para abrir en el inventario
                 self:checkAndOpenEggs()
             end
             task.wait(self.Config.openEggDelay)
@@ -735,7 +736,7 @@ function Core:StartLoops(Shared)
             if self.State.offlineRewardEnabled then
                 self:claimOfflineReward()
             end
-            task.wait(120) -- Cada 2 minutos
+            task.wait(120)
         end
     end)
     
@@ -779,14 +780,13 @@ end
 
 -- ✅ Funciones helper para huevos
 function Core:checkAndOpenEggs()
-    -- Buscar en PlayerGui huevos listos para abrir
     local playerGui = self.Shared.Player:FindFirstChild("PlayerGui")
     if not playerGui then return end
     
     local mainGui = playerGui:FindFirstChild("MainGui")
     if not mainGui then return end
     
-    -- Buscar huevos en el inventario que estén listos
+    -- Buscar huevos listos para abrir en el inventario
     local eggsFolder = mainGui:FindFirstChild("Eggs") or mainGui:FindFirstChild("Inventory")
     if not eggsFolder then return end
     
@@ -805,7 +805,6 @@ function Core:checkAndOpenEggs()
 end
 
 function Core:checkAndPlaceEggs()
-    -- Buscar huevos en el inventario para colocar
     local playerGui = self.Shared.Player:FindFirstChild("PlayerGui")
     if not playerGui then return end
     
@@ -844,7 +843,7 @@ function Core:getPlotPosition()
 end
 
 function Core:updateStats()
-    self.GUI.statsLabel.Text = string.format("🥚 %d |  %d | 🔄 %d", 
+    self.GUI.statsLabel.Text = string.format("🥚 %d | 💰 %d | 🔄 %d", 
         self.State.stolenCount, self.State.sellCount, self.State.openCount)
 end
 
@@ -1271,7 +1270,7 @@ function Core:mainLoop()
                 if not egg.Parent then continue end
                 local rarity = eggData.rarity
                 local weight = self.Utils:getEggWeight(egg)
-                self.GUI.statusLabel.Text = string.format("🥷 %s [%s] %.1fkg (%d/%d)", egg.Name, rarity, weight, i, #filteredEggs)
+                self.GUI.statusLabel.Text = string.format(" %s [%s] %.1fkg (%d/%d)", egg.Name, rarity, weight, i, #filteredEggs)
                 self.GUI.statusLabel.TextColor3 = self.Config.accentPink
                 local success = self:stealEgg(egg)
                 if success then
