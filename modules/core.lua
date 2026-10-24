@@ -14,6 +14,7 @@ function Core:Init(Shared)
     
     self:connectEvents()
     self:listenForBoostOffers()
+    self:listenForNotifications()
     
     task.delay(1.5, function()
         self:autoDetectTreadmill()
@@ -21,7 +22,7 @@ function Core:Init(Shared)
 end
 
 -- ============================================
--- 🚀 TREADMILL BOOST
+-- 🚀 TREADMILL BOOST (CORREGIDO - Envía "Claim" con UUID)
 -- ============================================
 function Core:listenForBoostOffers()
     local remotes = self.Shared.Services.ReplicatedStorage:FindFirstChild("Remotes")
@@ -51,7 +52,9 @@ function Core:listenForBoostOffers()
 end
 
 function Core:claimTreadmillBoost()
-    if not self.State.currentBoostUUID then return false end
+    if not self.State.currentBoostUUID then 
+        return false 
+    end
     
     local remotes = self.Shared.Services.ReplicatedStorage:FindFirstChild("Remotes")
     if not remotes then return false end
@@ -59,14 +62,14 @@ function Core:claimTreadmillBoost()
     local boostRemote = remotes:FindFirstChild("TreadmillBoost")
     if not boostRemote then return false end
     
-    self.Utils:log("🚀 Claiming Boost: " .. self.State.currentBoostUUID)
+    self.Utils:log("🚀 Claiming: " .. self.State.currentBoostUUID)
     
     local ok = pcall(function()
         boostRemote:FireServer("Claim", self.State.currentBoostUUID)
     end)
     
     if ok then
-        self.Utils:log("✅ Boost Claim sent")
+        self.Utils:log("✅ Claim sent")
         return true
     end
     
@@ -74,68 +77,38 @@ function Core:claimTreadmillBoost()
 end
 
 -- ============================================
--- 🔓 AUTO OPEN EGG (CORREGIDO - Busca en Backpack)
+-- 🔔 LISTENER DE NOTIFICACIONES (CORREGIDO)
 -- ============================================
-function Core:openEgg(eggUUID)
+function Core:listenForNotifications()
     local remotes = self.Shared.Services.ReplicatedStorage:FindFirstChild("Remotes")
-    if not remotes then return false end
+    if not remotes then return end
     
-    local eggGuiAction = remotes:FindFirstChild("EggGuiAction")
-    if not eggGuiAction then return false end
+    local notificationRemote = remotes:FindFirstChild("Notification")
+    if not notificationRemote then return end
     
-    self.Utils:log("🔓 Opening egg: " .. eggUUID)
-    
-    local ok, result = pcall(function()
-        return eggGuiAction:InvokeServer("Open", eggUUID)
-    end)
-    
-    if ok and result then
-        self.Utils:log("✅ Egg opened: " .. tostring(result[2] or "success"))
-        self.State.openCount = (self.State.openCount or 0) + 1
-        return true
-    end
-    
-    return false
-end
-
-function Core:checkAndOpenEggs()
-    local player = self.Shared.Player
-    local backpack = player:FindFirstChild("Backpack")
-    if not backpack then return end
-    
-    -- Buscar Tools que sean huevos (tienen UUID en el nombre)
-    for _, tool in ipairs(backpack:GetChildren()) do
-        if tool:IsA("Tool") then
-            -- Extraer UUID del nombre del Tool
-            local uuid = self:extractUUIDFromToolName(tool.Name)
-            if uuid then
-                self.Utils:log("🥚 Found egg in backpack: " .. tool.Name)
-                self:openEgg(uuid)
-                task.wait(1) -- Esperar entre aperturas
+    notificationRemote.OnClientEvent:Connect(function(message, ...)
+        if message then
+            -- Detectar huevo listo para abrir
+            if message:find("ready to hatch") then
+                self.Utils:log(" Egg ready to hatch!")
+                self.State.eggReadyToOpen = true
+            end
+            
+            -- Detectar huevo colocado
+            if message:find("placed!") then
+                self.Utils:log("✅ " .. message)
+            end
+            
+            -- Detectar venta
+            if message:find("Sold") then
+                self.Utils:log("💰 " .. message)
             end
         end
-    end
-end
-
-function Core:extractUUIDFromToolName(toolName)
-    -- Formato: "AnimalName (Weight kg)"
-    -- El UUID está en el Name del Tool como atributo
-    -- Buscamos el UUID en los atributos del Tool
-    local uuid = toolName:match("(%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x)")
-    if uuid then return uuid end
-    
-    -- Si no está en el nombre, buscar en atributos
-    local tool = self.Shared.Player.Backpack:FindFirstChild(toolName)
-    if tool then
-        uuid = tool:GetAttribute("UUID") or tool:GetAttribute("Id")
-        if uuid then return uuid end
-    end
-    
-    return nil
+    end)
 end
 
 -- ============================================
--- 📍 AUTO PLACE EGG (CORREGIDO - Usa coordenadas del plot)
+-- 📍 AUTO PLACE EGG (CORREGIDO - Coordenadas relativas)
 -- ============================================
 function Core:placeEgg(eggUUID, x, y)
     local remotes = self.Shared.Services.ReplicatedStorage:FindFirstChild("Remotes")
@@ -144,7 +117,7 @@ function Core:placeEgg(eggUUID, x, y)
     local placeEggRemote = remotes:FindFirstChild("PlaceEggRequest")
     if not placeEggRemote then return false end
     
-    self.Utils:log("📍 Placing egg: " .. eggUUID)
+    self.Utils:log("📍 Placing: " .. eggUUID)
     
     local ok, result = pcall(function()
         return placeEggRemote:InvokeServer(eggUUID, x, y)
@@ -164,32 +137,81 @@ function Core:checkAndPlaceEggs()
     local backpack = player:FindFirstChild("Backpack")
     if not backpack then return end
     
-    -- Obtener posición del plot
     local plotPos = self:getPlotPosition()
-    if not plotPos then
-        self.Utils:log("❌ No plot position found")
-        return
-    end
+    if not plotPos then return end
     
-    -- Coordenadas base del plot (ajustar según tu plot)
-    local baseX = plotPos.X
-    local baseY = plotPos.Y
-    
-    -- Buscar Tools que sean huevos
     for _, tool in ipairs(backpack:GetChildren()) do
         if tool:IsA("Tool") then
-            local uuid = self:extractUUIDFromToolName(tool.Name)
+            local uuid = tool:GetAttribute("UUID") 
+                or tool:GetAttribute("Id")
+                or tool.Name:match("(%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x)")
+            
             if uuid then
-                -- Coordenadas aleatorias dentro del plot
-                local x = baseX + math.random(-5, 5)
-                local y = baseY + math.random(-5, 5)
+                -- Coordenadas RELATIVAS al plot (valores pequeños)
+                local relX = math.random(-10, 10) + math.random()
+                local relY = math.random(-65, -50) + math.random()
                 
-                self.Utils:log("🥚 Placing " .. tool.Name .. " at (" .. x .. ", " .. y .. ")")
-                self:placeEgg(uuid, x, y)
-                task.wait(2) -- Esperar entre colocaciones
+                self.Utils:log("🥚 Placing " .. tool.Name .. " at (" .. relX .. ", " .. relY .. ")")
+                local success = self:placeEgg(uuid, relX, relY)
+                
+                if success then
+                    task.wait(2)
+                end
             end
         end
     end
+end
+
+-- ============================================
+-- 🔓 AUTO OPEN EGG (CORREGIDO - Detecta notificación)
+-- ============================================
+function Core:openEgg(eggUUID)
+    local remotes = self.Shared.Services.ReplicatedStorage:FindFirstChild("Remotes")
+    if not remotes then return false end
+    
+    local eggGuiAction = remotes:FindFirstChild("EggGuiAction")
+    if not eggGuiAction then return false end
+    
+    self.Utils:log("🔓 Opening: " .. eggUUID)
+    
+    local ok, result = pcall(function()
+        return eggGuiAction:InvokeServer("Open", eggUUID)
+    end)
+    
+    if ok and result and result[1] == true then
+        self.Utils:log("✅ Egg opened: " .. (result[2] or "success"))
+        self.State.openCount = (self.State.openCount or 0) + 1
+        return true
+    end
+    
+    return false
+end
+
+function Core:checkAndOpenEggs()
+    if not self.State.eggReadyToOpen then return end
+    
+    local player = self.Shared.Player
+    local backpack = player:FindFirstChild("Backpack")
+    if not backpack then return end
+    
+    -- Buscar huevos en el inventario
+    for _, tool in ipairs(backpack:GetChildren()) do
+        if tool:IsA("Tool") then
+            local uuid = tool:GetAttribute("UUID") 
+                or tool:GetAttribute("Id")
+                or tool.Name:match("(%x%x%x%x%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%-%x%x%x%x%x%x%x%x%x%x%x%x)")
+            
+            if uuid then
+                self.Utils:log(" Found egg: " .. tool.Name)
+                self:openEgg(uuid)
+                self.State.eggReadyToOpen = false
+                task.wait(1)
+                return
+            end
+        end
+    end
+    
+    self.State.eggReadyToOpen = false
 end
 
 -- ============================================
@@ -202,7 +224,7 @@ function Core:sellAll()
     local sellRemote = remotes:FindFirstChild("Sell")
     if not sellRemote then return false end
     
-    self.Utils:log(" Selling all animals...")
+    self.Utils:log("💰 Selling all...")
     
     local ok = pcall(function()
         sellRemote:FireServer(true)
@@ -227,14 +249,14 @@ function Core:equipBest()
     local animalGuiAction = remotes:FindFirstChild("AnimalGuiAction")
     if not animalGuiAction then return false end
     
-    self.Utils:log("⭐ Equipping best animals...")
+    self.Utils:log("⭐ Equipping best...")
     
     local ok, result = pcall(function()
         return animalGuiAction:InvokeServer("EquipBest")
     end)
     
     if ok then
-        self.Utils:log("✅ Best animals equipped")
+        self.Utils:log("✅ Best equipped")
         return true
     end
     
@@ -259,19 +281,25 @@ function Core:claimOfflineReward()
     
     if ok and result then
         local data = result[1]
-        if data and data.Amount and data.Amount > 0 then
-            self.Utils:log("✅ Offline reward claimed: $" .. data.Amount)
-        else
-            self.Utils:log("⚠️ No offline reward available")
+        if data and type(data) == "table" then
+            local amount = data.Amount or 0
+            local seconds = data.Seconds or 0
+            
+            if amount > 0 then
+                self.Utils:log("✅ Reward claimed: $" .. amount .. " (" .. seconds .. "s)")
+                return true
+            else
+                self.Utils:log("⚠️ No reward (Amount: " .. amount .. ")")
+                return false
+            end
         end
-        return true
     end
     
     return false
 end
 
 -- ============================================
--- 🔄 AUTO REBIRTH (CORREGIDO)
+-- 🔄 AUTO REBIRTH (CORREGIDO - InvokeServer)
 -- ============================================
 function Core:doRebirth()
     local remotes = self.Shared.Services.ReplicatedStorage:FindFirstChild("Remotes")
@@ -282,17 +310,13 @@ function Core:doRebirth()
     
     if askRebirth then
         self.Utils:log("🔄 Checking rebirth...")
-        local ok, result = pcall(function()
-            return askRebirth:InvokeServer()
-        end)
+        local ok, result = pcall(function() return askRebirth:InvokeServer() end)
         
         if ok and result then
             self.Utils:log("✅ AskRebirth OK")
             if doRebirthRemote then
                 task.wait(0.5)
-                local ok2 = pcall(function()
-                    return doRebirthRemote:InvokeServer()
-                end)
+                local ok2 = pcall(function() return doRebirthRemote:InvokeServer() end)
                 if ok2 then
                     self.Utils:log("✅ Rebirth executed")
                     return true
@@ -309,7 +333,7 @@ end
 -- 🎯 AUTO-DETECT TREADMILL
 -- ============================================
 function Core:autoDetectTreadmill()
-    self.Utils:log(" Searching for treadmill...")
+    self.Utils:log(" Searching treadmill...")
     local Workspace = self.Shared.Services.Workspace
     local essentials = Workspace:FindFirstChild("Essentials")
     if not essentials then return false end
@@ -337,7 +361,7 @@ function Core:autoDetectTreadmill()
                         _G.MyPlot = tycoon
                         _G.MyTreadmillInv = inv
                         
-                        self.Utils:log("✅ Treadmill found by Owner: " .. tycoon.Name)
+                        self.Utils:log("✅ Treadmill found: " .. tycoon.Name)
                         self:updateTreadmillUI(true, tycoon.Name)
                         return true
                     end
@@ -476,7 +500,7 @@ function Core:tpToTreadmill()
     end
     
     self.State.onTreadmill = true
-    self.Utils:log("✅ TP to Treadmill successful")
+    self.Utils:log("✅ TP successful")
     self.GUI.statusLabel.Text = "🏃 On Treadmill..."
     self.GUI.statusLabel.TextColor3 = self.Config.accentCyan
     
@@ -609,7 +633,7 @@ function Core:connectEvents()
         if not State.treadmillEnabled and State.onTreadmill then
             self:leaveTreadmill()
         end
-        self.Utils:log(State.treadmillEnabled and " Treadmill ON" or "🏃 Treadmill OFF")
+        self.Utils:log(State.treadmillEnabled and "🏃 Treadmill ON" or "🏃 Treadmill OFF")
         if State.treadmillEnabled then
             task.spawn(function()
                 task.wait(0.5)
@@ -708,7 +732,7 @@ function Core:applyPreset(type)
         elseif type == "ALL" then self.State.stealFilters[r.name] = true end
     end
     self:updateFilterUI()
-    self.Utils:log("⚡ Preset applied: " .. type)
+    self.Utils:log("⚡ Preset: " .. type)
 end
 
 -- ============================================
@@ -785,7 +809,7 @@ function Core:StartLoops(Shared)
             if self.State.openEggEnabled then
                 self:checkAndOpenEggs()
             end
-            task.wait(self.Config.openEggDelay or 1)
+            task.wait(2)
         end
     end)
     
@@ -795,7 +819,7 @@ function Core:StartLoops(Shared)
             if self.State.placeEggEnabled then
                 self:checkAndPlaceEggs()
             end
-            task.wait(self.Config.placeEggDelay or 2)
+            task.wait(3)
         end
     end)
     
@@ -829,9 +853,15 @@ function Core:StartLoops(Shared)
     task.spawn(function()
         while self.GUI.screenGui and self.GUI.screenGui.Parent do
             if self.State.offlineRewardEnabled then
-                self:claimOfflineReward()
+                local success = self:claimOfflineReward()
+                if success then
+                    task.wait(300)
+                else
+                    task.wait(120)
+                end
+            else
+                task.wait(10)
             end
-            task.wait(120)
         end
     end)
     
