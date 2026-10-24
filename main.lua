@@ -31,7 +31,7 @@ for _, gui in pairs(Services.CoreGui:GetChildren()) do
     if gui.Name == "StealEliteV18" then gui:Destroy() end
 end
 
-print("🥷 Steal Elite v18 - Iniciando...")
+print(" Steal Elite v18 - Iniciando...")
 
 local ConfigData = loadModule("config")
 if not ConfigData then return end
@@ -81,4 +81,4 @@ Shared.Core = Core
 if Settings then Settings:Init(Shared) end
 
 Core:StartLoops(Shared)
-print("🚀 Steal Elite v18 listo")
+print(" Steal Elite v18 listo - Todas las funciones activas")
