@@ -1,5 +1,5 @@
 -- ============================================
--- STEAL ELITE v17.1 - LOADER
+-- STEAL ELITE v18 - LOADER COMPLETO
 -- ============================================
 local BASE_URL = "https://raw.githubusercontent.com/lynxblackx/StealElite/refs/heads/main/modules/"
 
@@ -8,7 +8,7 @@ local Services = {
     Workspace = game:GetService("Workspace"),
     UserInputService = game:GetService("UserInputService"),
     CoreGui = game:GetService("CoreGui"),
-    ReplicatedStorage = game:GetService("ReplicatedStorage"), -- ✅ Agregado
+    ReplicatedStorage = game:GetService("ReplicatedStorage"),
     HttpService = game:GetService("HttpService")
 }
 
@@ -28,10 +28,10 @@ local function loadModule(name)
 end
 
 for _, gui in pairs(Services.CoreGui:GetChildren()) do
-    if gui.Name == "StealEliteV17" then gui:Destroy() end
+    if gui.Name == "StealEliteV18" then gui:Destroy() end
 end
 
-print("🥷 Steal Elite v17.1 - Iniciando...")
+print("🥷 Steal Elite v18 - Iniciando...")
 
 local ConfigData = loadModule("config")
 if not ConfigData then return end
@@ -52,11 +52,18 @@ local Shared = {
     State = {
         loopRunning = false, speedEnabled = true, afkEnabled = true,
         espEnabled = true, treadmillEnabled = false, rebirthEnabled = false,
-        onTreadmill = false, stolenCount = 0, failedCount = 0, afkCount = 0,
-        espCount = 0, treadmillTime = 0, currentSlot = 1,
-        lastInput = tick(), lastAfk = tick(), isAfk = false, isMinimized = false,
+        placeEggEnabled = false, openEggEnabled = false,
+        sellEnabled = false, equipBestEnabled = false,
+        offlineRewardEnabled = false,
+        onTreadmill = false, stolenCount = 0, failedCount = 0,
+        afkCount = 0, espCount = 0, treadmillTime = 0,
+        sellCount = 0, openCount = 0, placeCount = 0,
+        currentSlot = 1, lastInput = tick(), lastAfk = tick(),
+        lastSell = tick(), lastOpen = tick(), lastPlace = tick(),
+        isAfk = false, isMinimized = false,
         robLog = {}, eggs = {}, eggEntries = {}, espObjects = {},
-        stealFilters = {}, espFilters = {}, rarityCache = {}
+        stealFilters = {}, espFilters = {}, rarityCache = {},
+        currentBoostUUID = nil, pendingEggs = {}
     },
     GUI = {}, Switches = {}, Buttons = {steal = {}, esp = {}}
 }
@@ -76,4 +83,4 @@ Shared.Core = Core
 if Settings then Settings:Init(Shared) end
 
 Core:StartLoops(Shared)
-print("🚀 Steal Elite v17.1 listo")
+print("🚀 Steal Elite v18 listo - Todas las funciones activas")

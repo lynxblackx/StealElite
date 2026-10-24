@@ -18,7 +18,10 @@ return {
         afkInterval = {40, 80},
         afkIdleTime = 25,
         treadmillCheckInterval = 1.5,
-        rebirthInterval = 30
+        rebirthInterval = 30,
+        sellInterval = 60,
+        placeEggDelay = 2,
+        openEggDelay = 1
     },
     RARITIES = {
         {name = "God",         short = "GOD", color = Color3.fromRGB(222, 0, 0),     priority = 9, icon = "👑"},
